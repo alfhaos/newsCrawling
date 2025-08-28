@@ -1,0 +1,13 @@
+
+# ??? ??? ??
+crawling:
+  sites:
+    - name: "daum"
+      url: "https://news.daum.net/"
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crawling
+    username: root
+    password: root
+    driver-class-name: org.postgresql.Driver
