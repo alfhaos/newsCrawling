@@ -1,7 +1,6 @@
-package com.news.newscrawling.model.command;
+package com.news.newsCrawling.model.command;
 
-import com.news.newscrawling.model.contants.COMMAND_SITE_TYPE;
-import com.news.newscrawling.util.JsoupCrawlingUtil;
+import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

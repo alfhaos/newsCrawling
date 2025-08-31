@@ -2,12 +2,29 @@
 # ??? ??? ??
 crawling:
   sites:
-    - name: "daum"
+    daum:
       url: "https://news.daum.net/"
+      selectors:
+        depth1: "div.box_comp.box_news_headline2"
+        depth2: "ul.list_newsheadline2 > li"
+      data-selectors:
+        wrapper: "div.main-content"
+        title: "h3.tit_view"
+        content: "div.article_view"
+        publisher: "div.news_view.fs_type1"
+        createAt: "div.info_view span.num_date"
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/crawling
+    url: jdbc:postgresql://localhost:5432/crawling?options=-c%20search_path=public
     username: root
     password: root
     driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.news.newscrawling.model

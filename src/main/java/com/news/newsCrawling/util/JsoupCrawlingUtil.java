@@ -1,6 +1,6 @@
-package com.news.newscrawling.util;
+package com.news.newsCrawling.util;
 
-import com.news.newscrawling.config.CrawlingInterface;
+import com.news.newsCrawling.config.CrawlingInterface;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
 

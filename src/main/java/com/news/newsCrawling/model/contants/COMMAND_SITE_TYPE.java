@@ -1,4 +1,4 @@
-package com.news.newscrawling.model.contants;
+package com.news.newsCrawling.model.contants;
 
 import lombok.Getter;
 

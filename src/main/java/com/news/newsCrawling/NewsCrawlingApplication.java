@@ -1,4 +1,4 @@
-package com.news.newscrawling;
+package com.news.newsCrawling;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

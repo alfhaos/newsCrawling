@@ -1,4 +1,4 @@
-package com.news.newscrawling.util;
+package com.news.newsCrawling.util;
 
 import lombok.Data;
 

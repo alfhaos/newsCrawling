@@ -1,4 +1,4 @@
-package com.news.newscrawling.config;
+package com.news.newsCrawling.config;
 
 import org.jsoup.nodes.Document;
 
