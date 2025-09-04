@@ -11,6 +11,7 @@
     <insert id="saveAll" parameterType="list">
         INSERT INTO "NEWS_DATA" (
         title, content, publisher, url, create_at, site_type
+        ,comment_cnt, recommand_emotion_score, like_emotion_score, impressed_emotion_score, angry_emotion_score, sad_emotion_score
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
@@ -20,6 +21,12 @@
             , #{item.url}
             , #{item.createAt}
             , #{item.siteType}
+            , #{item.commentCnt}
+            , #{item.recommandEmotionScore}
+            , #{item.likeEmotionScore}
+            , #{item.impressedEmotionScore}
+            , #{item.angryEmotionScore}
+            , #{item.sadEmotionScore}
             )
         </foreach>
     </insert>

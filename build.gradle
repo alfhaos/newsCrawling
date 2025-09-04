@@ -30,10 +30,6 @@ dependencies {
     // ✅ 스케줄러 (Spring Scheduler)
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
     implementation 'org.springframework.boot:spring-boot-starter'
-
-    // ✅ Jsoup (웹 스크래핑)
-    implementation 'org.jsoup:jsoup:1.17.2'
-
     // ✅ OpenNLP (자연어 처리)
     implementation 'org.apache.opennlp:opennlp-tools:2.3.1'
 
@@ -41,6 +37,10 @@ dependencies {
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.jetbrains:annotations:24.0.0'
+
+    // 드라이버 매니저
+    implementation 'io.github.bonigarcia:webdrivermanager:6.1.0'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.12.1'
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

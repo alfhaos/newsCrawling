@@ -11,8 +11,10 @@ crawling:
         wrapper: "div.main-content"
         title: "h3.tit_view"
         content: "div.article_view"
-        publisher: "div.news_view.fs_type1"
+        publisher: "div.news_view.fs_type1 > p"
         createAt: "div.info_view span.num_date"
+        comment: "div.util_wrap a.btn_ttalk"
+        emoticon: "div.inner_emoticon"
 
 spring:
   datasource:

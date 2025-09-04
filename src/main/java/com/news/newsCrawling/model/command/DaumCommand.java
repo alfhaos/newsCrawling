@@ -5,12 +5,11 @@ import com.news.newsCrawling.config.CrawlingSiteConfig.Site;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.NewscrawlingService;
-import com.news.newsCrawling.util.JsoupCrawlingUtil;
 import com.news.newsCrawling.util.RedisUtil;
+import com.news.newsCrawling.util.SeleniumCrawlingUtil;
 import lombok.RequiredArgsConstructor;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -21,7 +20,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class DaumCommand implements CommandInterface {
-    private final JsoupCrawlingUtil jsoupCrawlingUtil;
+    private final SeleniumCrawlingUtil seleniumCrawlingUtil;
     private final CrawlingSiteConfig crawlingSiteConfig;
     private final RedisUtil redisUtil;
     private final NewscrawlingService newscrawlingService;
@@ -32,18 +31,23 @@ public class DaumCommand implements CommandInterface {
     public void execute(String url) throws Exception {
         Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
         LinkedHashMap<String, String> selectors = daumSite.getSelectors();
-        Document doc = jsoupCrawlingUtil.fetchHtml(url);
 
-        // 이시간 주요 뉴스 추출
-        Element depth1EL = doc.selectFirst(selectors.get("depth1"));
+        // 셀레니움을 사용하여 메인 페이지의 요소 가져오기
+        List<WebElement> depth1Elements = seleniumCrawlingUtil.fetchMainHtml(url, selectors.get("depth1"));
 
-        Elements depth2ELs = depth1EL.select(selectors.get("depth2"));
+        if (depth1Elements.isEmpty()) {
+            System.out.println("DaumCommand - No elements found for depth1 selector.");
+            return;
+        }
 
-        List<NewsDataVo> list = NewsDataVo.dataFormatForMessage(depth2ELs, COMMAND_SITE_TYPE.DAUM);
+        WebElement depth1Element = depth1Elements.get(0);
+        List<WebElement> depth2Elements = depth1Element.findElements(By.cssSelector(selectors.get("depth2")));
+
+        List<NewsDataVo> list = NewsDataVo.dataFormatForMessage(depth2Elements, COMMAND_SITE_TYPE.DAUM);
         for (NewsDataVo newsDataVo : list) {
-            if(redisUtil.getData(newsDataVo.getUrl()) == null) {
+            if (redisUtil.getData(newsDataVo.getUrl()) == null) {
                 // Redis에 저장
-                redisUtil.saveData(newsDataVo.getUrl(), "");
+                //redisUtil.saveData(newsDataVo.getUrl(), "");
                 System.out.println("DaumCommand - New URL Found: " + newsDataVo.getUrl());
             } else {
                 // 이미 처리된 URL인 경우 리스트에서 제거
@@ -51,7 +55,7 @@ public class DaumCommand implements CommandInterface {
                 System.out.println("DaumCommand - URL Already Processed: " + newsDataVo.getUrl());
             }
         }
-        
+
         // TODO: 카프카 메세지 전송 후 워커에서 DB에 저장해야 하지만 일단 바로 저장
         saveToDatabase(list);
     }
@@ -59,15 +63,15 @@ public class DaumCommand implements CommandInterface {
     @Override
     public void saveToDatabase(List<NewsDataVo> newsDataVo) throws IOException {
         List<NewsDataVo> savedList = new ArrayList<>();
+
+        Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
+        LinkedHashMap<String, String> dataSelectors = daumSite.getDataSelectors();
         // 각 url 접속 후 내용 추출
         for (NewsDataVo dataVo : newsDataVo) {
             try {
-                Document doc = jsoupCrawlingUtil.fetchHtml(dataVo.getUrl());
-                Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
-                LinkedHashMap<String, String> dataSelectors = daumSite.getDataSelectors();
 
-                Element wrapper = doc.selectFirst(dataSelectors.get("wrapper"));
-                NewsDataVo detailData = NewsDataVo.daumDataDetailFormat(wrapper, dataSelectors);
+                WebElement webElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), dataSelectors.get("emoticon"), dataSelectors.get("wrapper"));
+                NewsDataVo detailData = NewsDataVo.daumDataDetailFormat(webElement, dataSelectors);
                 detailData.setUrl(dataVo.getUrl());
                 detailData.setSiteType(COMMAND_SITE_TYPE.DAUM);
                 savedList.add(detailData);

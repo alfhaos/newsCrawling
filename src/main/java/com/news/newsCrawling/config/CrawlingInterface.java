@@ -1,7 +1,11 @@
 package com.news.newsCrawling.config;
 
-import org.jsoup.nodes.Document;
+import org.openqa.selenium.WebElement;
+
+import java.util.List;
 
 public interface CrawlingInterface {
-    Document fetchHtml(String url) throws Exception;
+
+    List<WebElement> fetchMainHtml(String url, String depth1) throws Exception;
+    WebElement fetchHtml(String url, String cssSelector, String wrapperSelector) throws Exception;
 }
