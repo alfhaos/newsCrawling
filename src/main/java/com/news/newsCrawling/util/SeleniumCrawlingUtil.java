@@ -29,6 +29,7 @@ public class SeleniumCrawlingUtil implements CrawlingInterface {
         return driver.findElements(By.cssSelector(depth1));
     }
 
+    // 기사 상세 조회
     @Override
     public WebElement fetchHtml(String url, String cssSelector, String wrapperSelector) throws Exception {
         driver.get(url);
@@ -40,6 +41,7 @@ public class SeleniumCrawlingUtil implements CrawlingInterface {
         return driver.findElement(By.cssSelector(wrapperSelector));
     }
 
+    // 사이드 영역 기사 추출
     @Override
     public WebElement fetchHtml(String url, String wrapperSelector) throws Exception {
         driver.get(url);

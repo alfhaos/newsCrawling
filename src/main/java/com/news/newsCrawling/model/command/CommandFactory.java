@@ -19,6 +19,8 @@ public class CommandFactory {
             String name = command.getClass().getName();
             if(name.equals(DaumCommand.class.getName())) {
                 commandMap.put(COMMAND_SITE_TYPE.DAUM.getValue(), command);
+            } else if(name.equals(DaumRecursiveCommand.class.getName())) {
+                commandMap.put(COMMAND_SITE_TYPE.RECURSIVE_DAUM.getValue(), command);
             }
         }
     }

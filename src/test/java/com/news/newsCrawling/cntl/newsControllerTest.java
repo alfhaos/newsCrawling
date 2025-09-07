@@ -7,6 +7,7 @@ import com.news.newsCrawling.util.RedisUtil;
 import com.news.newsCrawling.util.SeleniumCrawlingUtil;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,10 +85,18 @@ public class newsControllerTest {
         LinkedHashMap<String, String> dataSelectors = daumSite.getRecursiveDataSelectors();
         WebElement sideElement = seleniumCrawlingUtil.fetchHtml(url, dataSelectors.get("wrapper"));
 
+        // li 태그 목록 가져오기
+        List<WebElement> listItems = sideElement.findElements(By.tagName("li"));
 
-        
-
-
-        System.out.println(sideElement.getText());
+        // 각 li 태그의 a 태그에서 href 추출
+        for (WebElement listItem : listItems) {
+            try {
+                WebElement anchor = listItem.findElement(By.cssSelector(dataSelectors.get("url")));
+                String href = anchor.getAttribute("href");
+                System.out.println(href);
+            } catch (NoSuchElementException e) {
+                // 광고등 중간에 이상이 있을경우 무시하고 진행
+            }
+        }
     }
 }

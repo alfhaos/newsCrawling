@@ -16,7 +16,8 @@ crawling:
         comment: "div.util_wrap a.btn_ttalk"
         emoticon: "div.inner_emoticon"
       recursive-data-selectors:
-        wrapper: "ul.list_column"
+        wrapper: "div.box_cluster.box_news_recomm ul.list_column"
+        url: "div.item_column > a"
 
 spring:
   datasource:
@@ -28,6 +29,9 @@ spring:
     redis:
       host: localhost
       port: 6379
+  main:
+    # 순환 참조 허용
+    allow-circular-references: true
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
