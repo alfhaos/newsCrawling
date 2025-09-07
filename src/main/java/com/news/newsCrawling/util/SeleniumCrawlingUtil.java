@@ -32,10 +32,19 @@ public class SeleniumCrawlingUtil implements CrawlingInterface {
     @Override
     public WebElement fetchHtml(String url, String cssSelector, String wrapperSelector) throws Exception {
         driver.get(url);
-        // 15초 대기
+        // 10초 대기
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         // 특정 요소(댓글 등 동적로딩되는 요소) 로딩 대기
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(cssSelector)));
+        // 모든 요소 반환
+        return driver.findElement(By.cssSelector(wrapperSelector));
+    }
+
+    @Override
+    public WebElement fetchHtml(String url, String wrapperSelector) throws Exception {
+        driver.get(url);
+        // 10초 대기
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         // 모든 요소 반환
         return driver.findElement(By.cssSelector(wrapperSelector));
     }

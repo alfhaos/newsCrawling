@@ -74,4 +74,20 @@ public class newsControllerTest {
             System.out.println(webElement.getText());
         }
     }
+
+    @Test
+    @Rollback(value = true)
+    @Transactional
+    public void recursiveCrawlingTest() throws Exception {
+        String url = "https://v.daum.net/v/20250907160847526";
+        CrawlingSiteConfig.Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
+        LinkedHashMap<String, String> dataSelectors = daumSite.getRecursiveDataSelectors();
+        WebElement sideElement = seleniumCrawlingUtil.fetchHtml(url, dataSelectors.get("wrapper"));
+
+
+        
+
+
+        System.out.println(sideElement.getText());
+    }
 }

@@ -18,5 +18,6 @@ public class CrawlingSiteConfig {
         private String url;
         private LinkedHashMap<String, String> selectors;
         private LinkedHashMap<String, String> dataSelectors;
+        private LinkedHashMap<String, String> recursiveDataSelectors;
     }
 }

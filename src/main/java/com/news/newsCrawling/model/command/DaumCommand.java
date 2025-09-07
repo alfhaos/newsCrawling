@@ -69,12 +69,17 @@ public class DaumCommand implements CommandInterface {
         // 각 url 접속 후 내용 추출
         for (NewsDataVo dataVo : newsDataVo) {
             try {
+                // 기사의 메인 내용 추출
+//                WebElement webElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), dataSelectors.get("emoticon"), dataSelectors.get("wrapper"));
+//                NewsDataVo detailData = NewsDataVo.daumDataDetailFormat(webElement, dataSelectors);
+//                detailData.setUrl(dataVo.getUrl());
+//                detailData.setSiteType(COMMAND_SITE_TYPE.DAUM);
+//                savedList.add(detailData);
 
-                WebElement webElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), dataSelectors.get("emoticon"), dataSelectors.get("wrapper"));
-                NewsDataVo detailData = NewsDataVo.daumDataDetailFormat(webElement, dataSelectors);
-                detailData.setUrl(dataVo.getUrl());
-                detailData.setSiteType(COMMAND_SITE_TYPE.DAUM);
-                savedList.add(detailData);
+
+                // 재귀적 크롤링을 위한 사이드 섹터의 기사 추출 및 카프카를 통해 워커에게 전송
+                WebElement sideElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), dataSelectors.get("sideDepth1"));
+
 
             } catch (Exception e) {
                 System.err.println("Error processing URL: " + dataVo.getUrl());

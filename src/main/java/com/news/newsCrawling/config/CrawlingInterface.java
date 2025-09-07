@@ -8,4 +8,6 @@ public interface CrawlingInterface {
 
     List<WebElement> fetchMainHtml(String url, String depth1) throws Exception;
     WebElement fetchHtml(String url, String cssSelector, String wrapperSelector) throws Exception;
+
+    WebElement fetchHtml(String url, String wrapperSelector) throws Exception;
 }
