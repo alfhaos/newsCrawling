@@ -31,9 +31,9 @@ spring:
       port: 6379
   config:
     activate:
-      on-profile: local
+      on-profile: dev
   kafka:
-    bootstrap-servers: 127.0.0.1:10000, 127.0.0.1:10001, 127.0.0.1:10002
+    bootstrap-servers: localhost:9092
     consumer:
       group-id: hb
       auto-offset-reset: earliest
@@ -50,6 +50,3 @@ agent:
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.news.newscrawling.model
-
-server:
-  port: 8081

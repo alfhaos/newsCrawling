@@ -1,18 +1,20 @@
-package com.news.newsCrawling.model.command;
+package com.news.newsCrawling.service.command;
 
 import com.news.newsCrawling.config.CrawlingSiteConfig;
 import com.news.newsCrawling.config.CrawlingSiteConfig.Site;
+import com.news.newsCrawling.model.contants.AGENT_ROLE;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
-import com.news.newsCrawling.service.NewscrawlingService;
+import com.news.newsCrawling.service.NewsCrawlingService;
 import com.news.newsCrawling.util.RedisUtil;
 import com.news.newsCrawling.util.SeleniumCrawlingUtil;
-import com.news.newsCrawling.util.TempUtil;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -26,13 +28,22 @@ public class DaumCommand implements CommandInterface {
     private final SeleniumCrawlingUtil seleniumCrawlingUtil;
     private final CrawlingSiteConfig crawlingSiteConfig;
     private final RedisUtil redisUtil;
-    private final NewscrawlingService newscrawlingService;
-    private final TempUtil tempUtil;
+    private final NewsCrawlingService newscrawlingService;
+    private final KafkaTemplate<String, MessageVo> kafkaTemplate;
 
+    @Value("${agent.topic}")
+    private String topic;
+
+    @Value("${agent.role}")
+    private String agentRole;
 
     // 메인 사이트 최초 추출
     @Override
     public void execute(MessageVo message) throws Exception {
+
+
+        // 워커가 아닐경우 실행하지 않음
+        if (!AGENT_ROLE.MAIN.name().equalsIgnoreCase(agentRole)) {return;}
 
         // 메인 기사(depth 1)만 처리
         if(message.getDepth() != 1) { return;}
@@ -51,32 +62,36 @@ public class DaumCommand implements CommandInterface {
         WebElement depth1Element = depth1Elements.get(0);
         List<WebElement> depth2Elements = depth1Element.findElements(By.cssSelector(selectors.get("depth2")));
 
-        List<NewsDataVo> list = NewsDataVo.dataFormatForMessage(depth2Elements, COMMAND_SITE_TYPE.DAUM);
-        for (NewsDataVo newsDataVo : list) {
-            if (redisUtil.getData(newsDataVo.getUrl()) == null) {
+        List<MessageVo> list = MessageVo.dataFormatForMessage(depth2Elements, COMMAND_SITE_TYPE.DAUM);
+        for (MessageVo messageVo : list) {
+            if (redisUtil.getData(messageVo.getUrl()) == null) {
                 // Redis에 저장
-                redisUtil.saveData(newsDataVo.getUrl(), "");
-                System.out.println("DaumCommand - New URL Found: " + newsDataVo.getUrl());
+//                redisUtil.saveData(messageVo.getUrl(), "");
+                System.out.println("DaumCommand - New URL Found: " + messageVo.getUrl());
             } else {
                 // 이미 처리된 URL인 경우 리스트에서 제거
-                list.remove(newsDataVo);
-                System.out.println("DaumCommand - URL Already Processed: " + newsDataVo.getUrl());
+                list.remove(messageVo);
+                System.out.println("DaumCommand - URL Already Processed: " + messageVo.getUrl());
             }
         }
 
         // TODO: 카프카 메세지 전송 후 워커에서 DB에 저장해야 하지만 일단 바로 저장
-        saveToDatabase(list);
+        for (MessageVo messageVo : list) {
+            kafkaTemplate.send(topic, messageVo);
+        }
+
+//        saveToDatabase(list);
     }
 
     @Override
-    public void saveToDatabase(List<NewsDataVo> newsDataVo) throws IOException {
+    public void saveToDatabase(List<MessageVo> messageList) throws IOException {
         List<NewsDataVo> savedList = new ArrayList<>();
 
         Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
         LinkedHashMap<String, String> dataSelectors = daumSite.getDataSelectors();
         LinkedHashMap<String, String> rcDataSelectors = daumSite.getRecursiveDataSelectors();
         // 각 url 접속 후 내용 추출
-        for (NewsDataVo dataVo : newsDataVo) {
+        for (MessageVo dataVo : messageList) {
             try {
                 // 기사의 메인 내용 추출
                 WebElement webElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), dataSelectors.get("emoticon"), dataSelectors.get("wrapper"));
@@ -101,7 +116,7 @@ public class DaumCommand implements CommandInterface {
                             urlList.add(MessageVo.builder()
                                     .url(href)
                                     .depth(2)
-                                    .type(COMMAND_SITE_TYPE.DAUM)
+                                    .siteType(COMMAND_SITE_TYPE.DAUM)
                                     .build());
                         }
                     } catch (NoSuchElementException e) {
@@ -110,7 +125,7 @@ public class DaumCommand implements CommandInterface {
                 }
 
                 // TODO: 카프카에 재귀적 크롤링 메세지 전송
-                tempUtil.test(urlList);
+//                tempUtil.test(urlList);
 
             } catch (Exception e) {
                 System.err.println("Error processing URL: " + dataVo.getUrl());

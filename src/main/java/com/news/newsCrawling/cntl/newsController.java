@@ -1,10 +1,10 @@
 package com.news.newsCrawling.cntl;
 
-import com.news.newsCrawling.model.command.CommandFactory;
-import com.news.newsCrawling.model.command.CommandInterface;
+import com.news.newsCrawling.service.command.CommandFactory;
+import com.news.newsCrawling.service.command.CommandInterface;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
-import com.news.newsCrawling.service.NewscrawlingService;
+import com.news.newsCrawling.service.NewsCrawlingService;
 import com.news.newsCrawling.util.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api")
 public class newsController {
-    private final NewscrawlingService newscrawlingService;
+    private final NewsCrawlingService newscrawlingService;
     private final CommandFactory commandFactory;
 
 
@@ -26,7 +26,7 @@ public class newsController {
         CommandInterface command = commandFactory.getCommand(COMMAND_SITE_TYPE.DAUM.getValue());
         MessageVo messageVo = MessageVo.builder()
                 .url("https://news.daum.net/")
-                .type(COMMAND_SITE_TYPE.DAUM)
+                .siteType(COMMAND_SITE_TYPE.DAUM)
                 .depth(1)
                 .build();
 

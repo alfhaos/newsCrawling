@@ -2,7 +2,7 @@ package com.news.newsCrawling.service.impl;
 
 import com.news.newsCrawling.mapper.NewsCrawlingMapper;
 import com.news.newsCrawling.model.vo.NewsDataVo;
-import com.news.newsCrawling.service.NewscrawlingService;
+import com.news.newsCrawling.service.NewsCrawlingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +10,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class NewscrawlingServiceImpl implements NewscrawlingService {
+public class NewsCrawlingServiceImpl implements NewsCrawlingService {
 
     private final NewsCrawlingMapper newscrawlingMapper;
 

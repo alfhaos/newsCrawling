@@ -2,7 +2,7 @@ package com.news.newsCrawling.cntl;
 
 import com.news.newsCrawling.config.CrawlingSiteConfig;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
-import com.news.newsCrawling.service.NewscrawlingService;
+import com.news.newsCrawling.service.NewsCrawlingService;
 import com.news.newsCrawling.util.RedisUtil;
 import com.news.newsCrawling.util.SeleniumCrawlingUtil;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ public class newsControllerTest {
     @Autowired
     private RedisUtil redisUtil;
     @Autowired
-    private NewscrawlingService newscrawlingService;
+    private NewsCrawlingService newscrawlingService;
 
     @Test
     @Rollback(value = true)

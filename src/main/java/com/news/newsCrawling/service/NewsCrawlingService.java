@@ -4,7 +4,7 @@ import com.news.newsCrawling.model.vo.NewsDataVo;
 
 import java.util.List;
 
-public interface NewscrawlingService {
+public interface NewsCrawlingService {
     int test();
 
     // 전체 데이터 builk insert

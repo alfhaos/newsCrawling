@@ -1,7 +1,7 @@
 package com.news.newsCrawling.util;
 
-import com.news.newsCrawling.model.command.CommandFactory;
-import com.news.newsCrawling.model.command.CommandInterface;
+import com.news.newsCrawling.service.command.CommandFactory;
+import com.news.newsCrawling.service.command.CommandInterface;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
 import lombok.RequiredArgsConstructor;

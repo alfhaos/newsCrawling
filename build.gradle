@@ -42,6 +42,12 @@ dependencies {
     implementation 'io.github.bonigarcia:webdrivermanager:6.1.0'
     implementation 'org.seleniumhq.selenium:selenium-java:4.12.1'
 
+    // ✅ Spring for Apache Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // ✅ Kafka JSON Serializer/Deserializer
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'

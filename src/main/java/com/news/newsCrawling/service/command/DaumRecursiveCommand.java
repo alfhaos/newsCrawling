@@ -1,16 +1,14 @@
-package com.news.newsCrawling.model.command;
+package com.news.newsCrawling.service.command;
 
 import com.news.newsCrawling.config.CrawlingSiteConfig;
 import com.news.newsCrawling.config.CrawlingSiteConfig.Site;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
-import com.news.newsCrawling.service.NewscrawlingService;
+import com.news.newsCrawling.service.NewsCrawlingService;
 import com.news.newsCrawling.util.RedisUtil;
 import com.news.newsCrawling.util.SeleniumCrawlingUtil;
 import lombok.RequiredArgsConstructor;
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +23,7 @@ public class DaumRecursiveCommand implements CommandInterface {
     private final SeleniumCrawlingUtil seleniumCrawlingUtil;
     private final CrawlingSiteConfig crawlingSiteConfig;
     private final RedisUtil redisUtil;
-    private final NewscrawlingService newscrawlingService;
+    private final NewsCrawlingService newscrawlingService;
 
 
     // 사이드 기사 추출 및 저장
@@ -55,6 +53,6 @@ public class DaumRecursiveCommand implements CommandInterface {
     }
 
     @Override
-    public void saveToDatabase(List<NewsDataVo> newsDataVo) throws IOException {
+    public void saveToDatabase(List<MessageVo> newsDataVo) throws IOException {
     }
 }

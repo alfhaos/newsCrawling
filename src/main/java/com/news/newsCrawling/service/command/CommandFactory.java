@@ -1,4 +1,4 @@
-package com.news.newsCrawling.model.command;
+package com.news.newsCrawling.service.command;
 
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import org.springframework.beans.factory.annotation.Autowired;
