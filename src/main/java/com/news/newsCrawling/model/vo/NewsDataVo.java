@@ -5,6 +5,7 @@ import com.news.newsCrawling.util.CommonUtil;
 import lombok.Builder;
 import lombok.Data;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
 import java.time.LocalDateTime;
@@ -68,24 +69,29 @@ public class NewsDataVo {
         // 제목 추출
         WebElement title = wrapper.findElement(By.cssSelector(dataSelectors.get("title")));
 
-        // 제작사 추출
-        WebElement publisher = wrapper.findElement(By.cssSelector(dataSelectors.get("publisher")));
-
-        String publisherText = publisher.getText();
+        String publisherText = "";
+        try {
+            // 제작사 추출
+            WebElement publisher = wrapper.findElement(By.cssSelector(dataSelectors.get("publisher")));
+            publisherText = publisher.getText();
+        } catch (NoSuchElementException e) {
+            // 제작사 정보가 없을 경우 빈 문자열로 설정
+        }
 
         // 생성일 추출
         WebElement createAt = wrapper.findElement(By.cssSelector(dataSelectors.get("createAt")));
 
         // 댓글 갯수 추출
-        WebElement comment = wrapper.findElement(By.cssSelector(dataSelectors.get("comment")));
-        String commentText = comment.getText();
-
-        // 정규식을 사용하여 숫자만 추출
-        String number = commentText.replaceAll("[^0-9]", "");
-
-        // 숫자가 없을 경우 기본값 0으로 설정
-        int commentCount = number.isEmpty() ? 0 : Integer.parseInt(number);
-
+        int commentCount = 0; // 기본값 0으로 초기화
+        try {
+            WebElement comment = wrapper.findElement(By.cssSelector(dataSelectors.get("comment")));
+            String commentText = comment.getText();
+            // 정규식을 사용하여 숫자만 추출
+            String number = commentText.replaceAll("[^0-9]", "");
+            commentCount = number.isEmpty() ? 0 : Integer.parseInt(number);
+        } catch (NoSuchElementException e) {
+            // 요소가 없을 경우 기본값 0 유지
+        }
         // 이모티콘 추출
         WebElement emoticon = wrapper.findElement(By.cssSelector(dataSelectors.get("emoticon")));
         List<WebElement> emoticonList = emoticon.findElements(By.cssSelector("span.count_label"));
@@ -107,7 +113,7 @@ public class NewsDataVo {
         // NewsDataVo 객체 생성 및 반환
         return NewsDataVo.builder()
                 .title(title.getText())
-                .publisher(CommonUtil.extractPublisher(publisher.getText()))
+                .publisher(CommonUtil.extractPublisher(publisherText))
                 .createAt(LocalDateTime.parse(createAt.getText(), formatter))
                 .content(content)
                 .commentCnt(commentCount)

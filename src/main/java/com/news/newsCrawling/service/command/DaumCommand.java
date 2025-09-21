@@ -4,6 +4,7 @@ import com.news.newsCrawling.config.CrawlingSiteConfig;
 import com.news.newsCrawling.config.CrawlingSiteConfig.Site;
 import com.news.newsCrawling.model.contants.AGENT_ROLE;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
+import com.news.newsCrawling.model.contants.DATA_SELECTOR;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.NewsCrawlingService;
@@ -52,7 +53,7 @@ public class DaumCommand implements CommandInterface {
         LinkedHashMap<String, String> selectors = daumSite.getSelectors();
 
         // 셀레니움을 사용하여 메인 페이지의 요소 가져오기
-        List<WebElement> depth1Elements = seleniumCrawlingUtil.fetchMainHtml(message.getUrl(), selectors.get("depth1"));
+        List<WebElement> depth1Elements = seleniumCrawlingUtil.fetchMainHtml(message.getUrl(), selectors.get(DATA_SELECTOR.DEPTH1.getValue()));
 
         if (depth1Elements.isEmpty()) {
             System.out.println("DaumCommand - No elements found for depth1 selector.");
@@ -60,13 +61,13 @@ public class DaumCommand implements CommandInterface {
         }
 
         WebElement depth1Element = depth1Elements.get(0);
-        List<WebElement> depth2Elements = depth1Element.findElements(By.cssSelector(selectors.get("depth2")));
+        List<WebElement> depth2Elements = depth1Element.findElements(By.cssSelector(selectors.get(DATA_SELECTOR.DEPTH2.getValue())));
 
         List<MessageVo> list = MessageVo.dataFormatForMessage(depth2Elements, COMMAND_SITE_TYPE.DAUM);
         for (MessageVo messageVo : list) {
             if (redisUtil.getData(messageVo.getUrl()) == null) {
                 // Redis에 저장
-//                redisUtil.saveData(messageVo.getUrl(), "");
+                redisUtil.saveData(messageVo.getUrl(), "");
                 System.out.println("DaumCommand - New URL Found: " + messageVo.getUrl());
             } else {
                 // 이미 처리된 URL인 경우 리스트에서 제거
@@ -94,22 +95,23 @@ public class DaumCommand implements CommandInterface {
         for (MessageVo dataVo : messageList) {
             try {
                 // 기사의 메인 내용 추출
-                WebElement webElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), dataSelectors.get("emoticon"), dataSelectors.get("wrapper"));
+                WebElement webElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), dataSelectors.get(DATA_SELECTOR.EMOTICON.getValue()), dataSelectors.get(DATA_SELECTOR.WRAPPER.getValue()));
                 NewsDataVo detailData = NewsDataVo.daumDataDetailFormat(webElement, dataSelectors);
                 detailData.setUrl(dataVo.getUrl());
                 detailData.setSiteType(COMMAND_SITE_TYPE.DAUM);
+                detailData.setDepth(1);
                 savedList.add(detailData);
 
 
                 // 재귀적 크롤링을 위한 사이드 영역의 기사 추출 및 카프카를 통해 워커에게 전송
-                WebElement sideElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), rcDataSelectors.get("url"));
+                WebElement sideElement = seleniumCrawlingUtil.fetchHtml(dataVo.getUrl(), rcDataSelectors.get(DATA_SELECTOR.WRAPPER.getValue()));
                 // li 태그 목록 가져오기
                 List<WebElement> listItems = sideElement.findElements(By.tagName("li"));
                 List<MessageVo> urlList = new ArrayList<>();
                 // 각 li 태그의 a 태그에서 href 추출
                 for (WebElement listItem : listItems) {
                     try {
-                        WebElement anchor = listItem.findElement(By.cssSelector(dataSelectors.get("url")));
+                        WebElement anchor = listItem.findElement(By.cssSelector(rcDataSelectors.get(DATA_SELECTOR.URL.getValue())));
                         String href = anchor.getAttribute("href");
                         // 중복 체크 후 리스트에 추가
                         if (redisUtil.getData(href) == null) {
@@ -118,14 +120,18 @@ public class DaumCommand implements CommandInterface {
                                     .depth(2)
                                     .siteType(COMMAND_SITE_TYPE.DAUM)
                                     .build());
+
+                            redisUtil.saveData(href, "");
                         }
                     } catch (NoSuchElementException e) {
                         // 광고등 중간에 이상이 있을경우 무시하고 진행
                     }
                 }
 
-                // TODO: 카프카에 재귀적 크롤링 메세지 전송
-//                tempUtil.test(urlList);
+                //사이드 기사 카프카에 재귀적 크롤링 메세지 전송
+                for (MessageVo sideNews : urlList) {
+                    kafkaTemplate.send(topic, sideNews);
+                }
 
             } catch (Exception e) {
                 System.err.println("Error processing URL: " + dataVo.getUrl());
@@ -134,7 +140,9 @@ public class DaumCommand implements CommandInterface {
         }
 
         // DB 저장
-        newscrawlingService.saveAll(savedList);
+        if(!savedList.isEmpty()){
+            newscrawlingService.saveAll(savedList);
+        }
 
     }
 }

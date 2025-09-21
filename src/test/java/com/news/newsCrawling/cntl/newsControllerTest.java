@@ -2,6 +2,7 @@ package com.news.newsCrawling.cntl;
 
 import com.news.newsCrawling.config.CrawlingSiteConfig;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
+import com.news.newsCrawling.model.contants.DATA_SELECTOR;
 import com.news.newsCrawling.service.NewsCrawlingService;
 import com.news.newsCrawling.util.RedisUtil;
 import com.news.newsCrawling.util.SeleniumCrawlingUtil;
@@ -13,28 +14,29 @@ import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import static com.news.newsCrawling.config.CrawlingSiteConfig.*;
+
 @SpringBootTest
+@ActiveProfiles("local") // 테스트용 프로파일 활성화
 public class newsControllerTest {
 
     @Autowired
     private SeleniumCrawlingUtil seleniumCrawlingUtil;
     @Autowired
     private CrawlingSiteConfig crawlingSiteConfig;
-    @Autowired
-    private RedisUtil redisUtil;
-    @Autowired
-    private NewsCrawlingService newscrawlingService;
 
     @Test
     @Rollback(value = true)
     @Transactional
     public void testExtractData() throws Exception {
         String url = "https://v.daum.net/v/20250831190224453";
-        CrawlingSiteConfig.Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
+        Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
         LinkedHashMap<String, String> dataSelectors = daumSite.getDataSelectors();
 
         // HTML 가져오기
@@ -81,9 +83,9 @@ public class newsControllerTest {
     @Transactional
     public void recursiveCrawlingTest() throws Exception {
         String url = "https://v.daum.net/v/20250907160847526";
-        CrawlingSiteConfig.Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
+        Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
         LinkedHashMap<String, String> dataSelectors = daumSite.getRecursiveDataSelectors();
-        WebElement sideElement = seleniumCrawlingUtil.fetchHtml(url, dataSelectors.get("wrapper"));
+        WebElement sideElement = seleniumCrawlingUtil.fetchHtml(url, dataSelectors.get(DATA_SELECTOR.WRAPPER.getValue()));
 
         // li 태그 목록 가져오기
         List<WebElement> listItems = sideElement.findElements(By.tagName("li"));
@@ -91,7 +93,7 @@ public class newsControllerTest {
         // 각 li 태그의 a 태그에서 href 추출
         for (WebElement listItem : listItems) {
             try {
-                WebElement anchor = listItem.findElement(By.cssSelector(dataSelectors.get("url")));
+                WebElement anchor = listItem.findElement(By.cssSelector(dataSelectors.get(DATA_SELECTOR.URL.getValue())));
                 String href = anchor.getAttribute("href");
                 System.out.println(href);
             } catch (NoSuchElementException e) {

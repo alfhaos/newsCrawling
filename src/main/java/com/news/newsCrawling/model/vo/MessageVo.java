@@ -1,22 +1,35 @@
 package com.news.newsCrawling.model.vo;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @Builder
-public class MessageVo {
+@ToString
+public class MessageVo implements Serializable {
 
     private int depth;
     private String url;
     private COMMAND_SITE_TYPE siteType;
 
-
+    @JsonCreator
+    public MessageVo(
+            @JsonProperty("depth") int depth,
+            @JsonProperty("url") String url,
+            @JsonProperty("siteType") COMMAND_SITE_TYPE siteType) {
+        this.depth = depth;
+        this.url = url;
+        this.siteType = siteType;
+    }
     // 각 사이트별로 카프카메세지 포멧
     public static List<MessageVo> dataFormatForMessage(List<WebElement> elements, COMMAND_SITE_TYPE siteType) {
         if (siteType.equals(COMMAND_SITE_TYPE.DAUM)) {
