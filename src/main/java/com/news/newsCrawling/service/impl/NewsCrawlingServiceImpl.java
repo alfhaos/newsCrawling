@@ -6,6 +6,7 @@ import com.news.newsCrawling.service.NewsCrawlingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,5 +23,10 @@ public class NewsCrawlingServiceImpl implements NewsCrawlingService {
     @Override
     public void saveAll(List<NewsDataVo> savedList) {
         newscrawlingMapper.saveAll(savedList);
+    }
+
+    @Override
+    public List<String> makeCorpus(LocalDateTime localDateTime, int limit) {
+        return newscrawlingMapper.selectCorpusList(localDateTime, limit);
     }
 }
