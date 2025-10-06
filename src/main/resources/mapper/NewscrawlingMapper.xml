@@ -4,9 +4,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.news.newsCrawling.mapper.NewsCrawlingMapper">
-    <select id="test">
-        SELECT 1 AS test;
-    </select>
 
     <insert id="saveAll" parameterType="list">
         INSERT INTO "NEWS_DATA" (
@@ -37,11 +34,44 @@
             CONTENT
         FROM
             "NEWS_DATA"
-        WHERE
-            CREATE_AT >= #{localDateTime}
         ORDER BY
             CREATE_AT DESC
         LIMIT
             #{limit}
     </select>
+    <select id="selectContentById" resultType="com.news.newsCrawling.model.vo.NewsDataVo">
+        SELECT
+            id,
+            title,
+            content,
+            publisher,
+            url,
+            view_cnt                 AS viewCnt,
+            comment_cnt              AS commentCnt,
+            create_at                AS createAt,
+            recommand_emotion_score  AS recommandEmotionScore,
+            like_emotion_score       AS likeEmotionScore,
+            impressed_emotion_score  AS impressedEmotionScore,
+            angry_emotion_score      AS angryEmotionScore,
+            sad_emotion_score        AS sadEmotionScore,
+            depth,
+            site_type                AS siteType
+        FROM
+            "NEWS_DATA"
+        WHERE
+            ID = #{id}
+    </select>
+
+    <insert id="insertKeywords">
+        INSERT INTO "KEYWORDS" (
+        id, keyword, create_at
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.id}
+            , #{item.keyword}
+            , #{item.createAt}
+            )
+        </foreach>
+    </insert>
 </mapper>

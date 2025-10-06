@@ -3,6 +3,8 @@ package com.news.newsCrawling.util;
 import lombok.RequiredArgsConstructor;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
@@ -19,9 +21,11 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class KeyWordUtil {
-    
+
+    private final KoreanPostpositionRemover koreanPostpositionRemover;
     // 추출할 키워드 수
-    private static final int topN = 3;
+    private static final int topN = 5;
+    private static final String fieldName = "content";
     public List<String> extractCorpus(List<String> rawContents) {
 
         // 전처리 및 코퍼스 생성
@@ -40,43 +44,67 @@ public class KeyWordUtil {
 
     public List<String> extractKeywords(String document, List<String> corpus) throws IOException {
         // 메모리 인덱스 생성
-        ByteBuffersDirectory ramDirectory = new ByteBuffersDirectory();
-        StandardAnalyzer analyzer = new StandardAnalyzer();
-        IndexWriterConfig config = new IndexWriterConfig(analyzer);
-        IndexWriter writer = new IndexWriter(ramDirectory, config);
+        try (ByteBuffersDirectory ramDirectory = new ByteBuffersDirectory();
+             StandardAnalyzer analyzer = new StandardAnalyzer()) {
 
-        // 코퍼스 문서 추가
-        for (String doc : corpus) {
-            Document luceneDoc = new Document();
-            luceneDoc.add(new TextField("content", doc, TextField.Store.NO));
-            writer.addDocument(luceneDoc);
-        }
-        writer.close();
+            IndexWriterConfig config = new IndexWriterConfig(analyzer);
+            try (IndexWriter writer = new IndexWriter(ramDirectory, config)) {
+                FieldType fieldType = new FieldType(TextField.TYPE_STORED);
+                fieldType.setStoreTermVectors(true); // TermVector 저장 활성화
+                fieldType.setStoreTermVectorPositions(true);
+                fieldType.setStoreTermVectorOffsets(true);
 
-        // 인덱스 리더 생성
-        IndexReader reader = DirectoryReader.open(ramDirectory);
-        ClassicSimilarity similarity = new ClassicSimilarity();
+                // 코퍼스 문서 추가
+                for (String doc : corpus) {
+                    Document luceneDoc = new Document();
+                    luceneDoc.add(new Field(fieldName, doc, fieldType));
+                    writer.addDocument(luceneDoc);
+                }
 
-        // 단일 문서의 TF-IDF 계산
-        Map<String, Float> tfidfScores = new HashMap<>();
-        Terms terms = reader.getTermVector(0, "content");
-        if (terms != null) {
-            TermsEnum termsEnum = terms.iterator();
-            BytesRef term;
-            while ((term = termsEnum.next()) != null) {
-                String termText = term.utf8ToString();
-                float tf = similarity.tf(termsEnum.totalTermFreq());
-                float idf = similarity.idf(termsEnum.docFreq(), reader.numDocs());
-                tfidfScores.put(termText, tf * idf);
+                // 분석 대상 문서 추가
+                Document targetDoc = new Document();
+                targetDoc.add(new Field(fieldName, document, fieldType));
+                writer.addDocument(targetDoc);
+
+                writer.commit(); // 명시적으로 커밋
+            }
+
+            // 인덱스 리더 생성
+            try (IndexReader reader = DirectoryReader.open(ramDirectory)) {
+                if (reader.maxDoc() == 0) {
+                    throw new IllegalStateException("인덱스에 문서가 없습니다.");
+                }
+
+                ClassicSimilarity similarity = new ClassicSimilarity();
+                Map<String, Float> tfidfScores = new HashMap<>();
+
+                // 마지막 문서의 TermVector 가져오기 (document가 마지막에 추가됨)
+                Terms terms = reader.getTermVector(reader.maxDoc() - 1, fieldName);
+                if (terms != null) {
+                    TermsEnum termsEnum = terms.iterator();
+                    BytesRef term;
+                    while ((term = termsEnum.next()) != null) {
+                        String termText = term.utf8ToString();
+                        if (termText.length() >= 2) { // 2글자 이상 필터링
+                            float tf = similarity.tf(termsEnum.totalTermFreq());
+                            float idf = similarity.idf(termsEnum.docFreq(), reader.numDocs());
+                            tfidfScores.put(termText, tf * idf);
+                        }
+                    }
+                }
+                // TF-IDF 점수 기준 상위 N개 키워드 추출
+                List<String> result = new ArrayList<>(tfidfScores.entrySet().stream()
+                        .sorted((e1, e2) -> Float.compare(e2.getValue(), e1.getValue()))
+                        .limit(topN)
+                        .map(Map.Entry::getKey)
+                        .toList());
+
+                return KoreanPostpositionRemover.removePostposition(result).stream()
+                        .filter(word -> word.length() >= 2)
+                        .toList();
+
+
             }
         }
-        reader.close();
-
-        // TF-IDF 점수 기준 상위 N개 키워드 추출
-        return tfidfScores.entrySet().stream()
-                .sorted((e1, e2) -> Float.compare(e2.getValue(), e1.getValue()))
-                .limit(topN)
-                .map(Map.Entry::getKey)
-                .toList();
     }
 }

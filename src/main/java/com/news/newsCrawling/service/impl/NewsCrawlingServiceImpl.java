@@ -1,6 +1,7 @@
 package com.news.newsCrawling.service.impl;
 
 import com.news.newsCrawling.mapper.NewsCrawlingMapper;
+import com.news.newsCrawling.model.vo.KeywordVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.NewsCrawlingService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class NewsCrawlingServiceImpl implements NewsCrawlingService {
 
     @Override
     public int test() {
-        return newscrawlingMapper.test();
+        return 0;
     }
 
     @Override
@@ -28,5 +29,15 @@ public class NewsCrawlingServiceImpl implements NewsCrawlingService {
     @Override
     public List<String> makeCorpus(LocalDateTime localDateTime, int limit) {
         return newscrawlingMapper.selectCorpusList(localDateTime, limit);
+    }
+
+    @Override
+    public NewsDataVo selectContentById(long id) {
+        return newscrawlingMapper.selectContentById(id);
+    }
+
+    @Override
+    public void insertKeywords(List<KeywordVo> keywordVo) {
+        newscrawlingMapper.insertKeywords(keywordVo);
     }
 }

@@ -48,8 +48,8 @@ dependencies {
     // ✅ Kafka JSON Serializer/Deserializer
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    implementation 'org.apache.lucene:lucene-core:9.7.0'
-    implementation 'org.apache.lucene:lucene-analyzers-common:9.7.0'
+    // https://mvnrepository.com/artifact/org.apache.lucene/lucene-analyzers-common
+    implementation("org.apache.lucene:lucene-analyzers-common:8.11.2")
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

@@ -5,23 +5,26 @@ import com.news.newsCrawling.config.CrawlingSiteConfig.Site;
 import com.news.newsCrawling.model.contants.AGENT_ROLE;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.contants.DATA_SELECTOR;
+import com.news.newsCrawling.model.vo.KeywordVo;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.NewsCrawlingService;
+import com.news.newsCrawling.util.KeyWordUtil;
 import com.news.newsCrawling.util.RedisUtil;
 import com.news.newsCrawling.util.SeleniumCrawlingUtil;
+import com.news.newsCrawling.util.TextRankKeywordExtractor;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +34,8 @@ public class DaumCommand implements CommandInterface {
     private final RedisUtil redisUtil;
     private final NewsCrawlingService newscrawlingService;
     private final KafkaTemplate<String, MessageVo> kafkaTemplate;
+    private final KeyWordUtil keyWordUtil;
+    private final TextRankKeywordExtractor textRankKeywordExtractor;
 
     @Value("${agent.topic}")
     private String topic;
@@ -45,7 +50,13 @@ public class DaumCommand implements CommandInterface {
 
         // 워커가 아닐경우 실행하지 않음
         if (!AGENT_ROLE.MAIN.name().equalsIgnoreCase(agentRole)) {return;}
+        
+        // 키워드 분석을 위한 코퍼스 생성
+        List<String> corpus = redisUtil.getCorpus();
 
+        if(corpus == null || corpus.isEmpty()) {
+            redisUtil.saveCorpusData(newscrawlingService.makeCorpus(null, 10000));
+        }
         // 메인 기사(depth 1)만 처리
         if(message.getDepth() != 1) { return;}
 
@@ -144,5 +155,29 @@ public class DaumCommand implements CommandInterface {
             newscrawlingService.saveAll(savedList);
         }
 
+        List<String> corpus = redisUtil.getCorpus();
+        List<KeywordVo> keywordVoList = new ArrayList<>();
+        for (NewsDataVo newsDataVo : savedList) {
+            //TF-IDF 방식 키워드 추출
+            List<String> keywords1 = keyWordUtil.extractKeywords(newsDataVo.getContent(), corpus);
+
+            //TEXTRANK 방식 키워드 추출
+            List<String> keywords2 = textRankKeywordExtractor.extractKeywords(newsDataVo.getContent());
+            List<String> commonKeywords = new ArrayList<>(keywords1);
+            commonKeywords.retainAll(keywords2);
+            // 중복 단어 제거
+            commonKeywords = new ArrayList<>(new HashSet<>(commonKeywords));
+
+            KeywordVo keywordVo = KeywordVo.builder()
+                    .id(newsDataVo.getId())
+                    .keyword(commonKeywords.toString())
+                    .createAt(LocalDateTime.now())
+                    .build();
+
+            keywordVoList.add(keywordVo);
+        }
+
+        // 키워드 DB 저장
+        newscrawlingService.insertKeywords(keywordVoList);
     }
 }
