@@ -99,6 +99,7 @@ public class DaumCommand implements CommandInterface {
     public void saveToDatabase(List<MessageVo> messageList) throws IOException {
         List<NewsDataVo> savedList = new ArrayList<>();
 
+        if(messageList.isEmpty()) { return; }
         Site daumSite = crawlingSiteConfig.getSites().get(COMMAND_SITE_TYPE.DAUM.getMessage());
         LinkedHashMap<String, String> dataSelectors = daumSite.getDataSelectors();
         LinkedHashMap<String, String> rcDataSelectors = daumSite.getRecursiveDataSelectors();

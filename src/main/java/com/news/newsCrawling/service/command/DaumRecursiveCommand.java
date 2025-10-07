@@ -41,6 +41,8 @@ public class DaumRecursiveCommand implements CommandInterface {
     @Override
     public void saveToDatabase(List<MessageVo> newsDataVo) throws IOException {
 
+        if(newsDataVo.isEmpty()) { return; }
+
         List<NewsDataVo> savedList = new ArrayList<>();
         for (MessageVo message : newsDataVo) {
             // 사이드 기사(2번쨰 depth)만 처리

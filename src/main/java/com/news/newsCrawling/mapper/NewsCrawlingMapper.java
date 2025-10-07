@@ -1,5 +1,6 @@
 package com.news.newsCrawling.mapper;
 
+import com.news.newsCrawling.model.common.SearchDto;
 import com.news.newsCrawling.model.vo.KeywordVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import org.apache.ibatis.annotations.Mapper;
@@ -16,4 +17,10 @@ public interface NewsCrawlingMapper{
     NewsDataVo selectContentById(long id);
 
     void insertKeywords(List<KeywordVo> keywordVo);
+
+    List<NewsDataVo> searchByKeywords(SearchDto searchDto);
+
+    List<NewsDataVo> searchByTitleAndContent(SearchDto searchDto);
+
+    List<String> dailyKeyword();
 }

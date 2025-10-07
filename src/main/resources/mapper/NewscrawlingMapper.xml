@@ -5,7 +5,7 @@
 
 <mapper namespace="com.news.newsCrawling.mapper.NewsCrawlingMapper">
 
-    <insert id="saveAll" parameterType="list">
+    <insert id="saveAll" parameterType="list" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO "NEWS_DATA" (
         title, content, publisher, url, create_at, site_type
         ,comment_cnt, recommand_emotion_score, like_emotion_score, impressed_emotion_score, angry_emotion_score, sad_emotion_score
@@ -62,16 +62,83 @@
             ID = #{id}
     </select>
 
-    <insert id="insertKeywords">
+    <insert id="insertKeywords" parameterType="list">
         INSERT INTO "KEYWORDS" (
         id, keyword, create_at
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.id}
-            , #{item.keyword}
-            , #{item.createAt}
+            #{item.id},
+            #{item.keyword},
+            #{item.createAt}
             )
         </foreach>
     </insert>
+
+
+    <select id="searchByKeywords" parameterType="com.news.newsCrawling.model.common.SearchDto" resultType="com.news.newsCrawling.model.vo.NewsDataVo">
+        SELECT
+            n.id, -- 테이블 별칭을 명시적으로 추가
+            n.title,
+            n.content,
+            n.publisher,
+            n.url,
+            n.view_cnt                 AS viewCnt,
+            n.comment_cnt              AS commentCnt,
+            n.create_at                AS createAt,
+            n.recommand_emotion_score  AS recommandEmotionScore,
+            n.like_emotion_score       AS likeEmotionScore,
+            n.impressed_emotion_score  AS impressedEmotionScore,
+            n.angry_emotion_score      AS angryEmotionScore,
+            n.sad_emotion_score        AS sadEmotionScore,
+            n.depth,
+            n.site_type                AS siteType
+        FROM "NEWS_DATA" n
+                 JOIN "KEYWORDS" k ON n.id = k.id
+        WHERE k.keyword LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
+    <select id="searchByTitleAndContent" parameterType="com.news.newsCrawling.model.common.SearchDto" resultType="com.news.newsCrawling.model.vo.NewsDataVo">
+        SELECT
+            id,
+            title,
+            content,
+            publisher,
+            url,
+            view_cnt                 AS viewCnt,
+            comment_cnt              AS commentCnt,
+            create_at                AS createAt,
+            recommand_emotion_score  AS recommandEmotionScore,
+            like_emotion_score       AS likeEmotionScore,
+            impressed_emotion_score  AS impressedEmotionScore,
+            angry_emotion_score      AS angryEmotionScore,
+            sad_emotion_score        AS sadEmotionScore,
+            depth,
+            site_type                AS siteType
+        FROM "NEWS_DATA" n
+        <where>
+            <if test="title != null and title != ''">
+                n.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="content != null and content != ''">
+                n.content LIKE CONCAT('%', #{content}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="dailyKeyword" resultType="String">
+        WITH exploded_keywords AS (
+            SELECT UNNEST(
+                           STRING_TO_ARRAY(
+                                   REPLACE(
+                                           REPLACE(keyword, '[', ''), ']', ''), ', ')) AS single_keyword
+            FROM "KEYWORDS"
+            WHERE DATE(create_at) = CURRENT_DATE
+            )
+        SELECT single_keyword
+        FROM exploded_keywords
+        GROUP BY single_keyword
+        ORDER BY COUNT(*) DESC
+        LIMIT 5;
+    </select>
 </mapper>

@@ -1,6 +1,8 @@
 package com.news.newsCrawling.service.impl;
 
 import com.news.newsCrawling.mapper.NewsCrawlingMapper;
+import com.news.newsCrawling.model.common.SearchDto;
+import com.news.newsCrawling.model.contants.SEARCH_TYPE;
 import com.news.newsCrawling.model.vo.KeywordVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.NewsCrawlingService;
@@ -39,5 +41,19 @@ public class NewsCrawlingServiceImpl implements NewsCrawlingService {
     @Override
     public void insertKeywords(List<KeywordVo> keywordVo) {
         newscrawlingMapper.insertKeywords(keywordVo);
+    }
+
+    @Override
+    public List<NewsDataVo> searchByKeyword(SearchDto searchDto) {
+        if(searchDto.getSearchType().equals(SEARCH_TYPE.KEYWORD)) {
+            return newscrawlingMapper.searchByKeywords(searchDto);
+        } else {
+            return newscrawlingMapper.searchByTitleAndContent(searchDto);
+        }
+    }
+
+    @Override
+    public List<String> dailyKeyword() {
+        return newscrawlingMapper.dailyKeyword();
     }
 }

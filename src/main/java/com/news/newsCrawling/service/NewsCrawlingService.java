@@ -1,5 +1,6 @@
 package com.news.newsCrawling.service;
 
+import com.news.newsCrawling.model.common.SearchDto;
 import com.news.newsCrawling.model.vo.KeywordVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 
@@ -20,4 +21,10 @@ public interface NewsCrawlingService {
 
     // 키워드 저장
     void insertKeywords(List<KeywordVo> keywordVoList);
+
+    // 키워드 기반 검색
+    List<NewsDataVo> searchByKeyword(SearchDto searchDto);
+
+    // 일별 키워드 검색
+    List<String> dailyKeyword();
 }

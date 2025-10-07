@@ -1,5 +1,6 @@
 package com.news.newsCrawling.cntl;
 
+import com.news.newsCrawling.model.common.SearchDto;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
@@ -60,5 +61,18 @@ public class newsController {
         commonKeywords = new ArrayList<>(new HashSet<>(commonKeywords));
         
         return new CommonResponse<>(commonKeywords);
+    }
+
+    @GetMapping("/search")
+    private CommonResponse<Object> searchNewsData(
+            @RequestBody SearchDto searchDto) throws Exception {
+        List<NewsDataVo> searchResults = newscrawlingService.searchByKeyword(searchDto);
+        return new CommonResponse<>(searchResults);
+    }
+
+    @GetMapping("/daily/keyword")
+    private CommonResponse<Object> dailyKeyword() throws Exception {
+        List<String> keywords = newscrawlingService.dailyKeyword();
+        return new CommonResponse<>(keywords);
     }
 }
