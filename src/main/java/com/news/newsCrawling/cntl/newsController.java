@@ -28,8 +28,6 @@ public class newsController {
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
     private final EmailService emailService;
-
-
     @GetMapping("/")
     private CommonResponse<Object> test() throws Exception {
 
