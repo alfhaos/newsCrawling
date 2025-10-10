@@ -51,6 +51,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.lucene/lucene-analyzers-common
     implementation("org.apache.lucene:lucene-analyzers-common:8.11.2")
 
+    // SMTP
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'

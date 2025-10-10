@@ -44,16 +44,31 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: alfhaos489@gmail.com
+    password: vtde zpyq xzpz zuaf
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 agent:
   role: default
   topic: newsCrawling
-
+  target: colin.h.jeong@selvas.com
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.news.newscrawling.model
   configuration:
     map-underscore-to-camel-case: true
+
+logging:
+  level:
+    root: info
+    org.apache.ibatis: debug
 
 server:
   port: 8081

@@ -1,7 +1,6 @@
 package com.news.newsCrawling.service.command;
 
 import com.news.newsCrawling.model.vo.MessageVo;
-import com.news.newsCrawling.model.vo.NewsDataVo;
 
 import java.io.IOException;
 import java.util.List;

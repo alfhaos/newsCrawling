@@ -23,4 +23,8 @@ public interface NewsCrawlingMapper{
     List<NewsDataVo> searchByTitleAndContent(SearchDto searchDto);
 
     List<String> dailyKeyword();
+
+    List<NewsDataVo> searchByPopular(SearchDto searchDto);
+
+    List<String> weeklyKeyword();
 }

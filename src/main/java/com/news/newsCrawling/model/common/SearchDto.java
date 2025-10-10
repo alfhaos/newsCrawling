@@ -1,5 +1,6 @@
 package com.news.newsCrawling.model.common;
 
+import com.news.newsCrawling.model.contants.SEARCH_DATE;
 import com.news.newsCrawling.model.contants.SEARCH_TYPE;
 import lombok.Data;
 
@@ -10,5 +11,6 @@ public class SearchDto {
     private String title;
     private String content;
     private SEARCH_TYPE searchType;
+    private SEARCH_DATE searchDate;
 
 }

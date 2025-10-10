@@ -47,6 +47,8 @@ public class NewsCrawlingServiceImpl implements NewsCrawlingService {
     public List<NewsDataVo> searchByKeyword(SearchDto searchDto) {
         if(searchDto.getSearchType().equals(SEARCH_TYPE.KEYWORD)) {
             return newscrawlingMapper.searchByKeywords(searchDto);
+        } else if(searchDto.getSearchType().equals(SEARCH_TYPE.EMOTICON)) {
+            return newscrawlingMapper.searchByPopular(searchDto);
         } else {
             return newscrawlingMapper.searchByTitleAndContent(searchDto);
         }
@@ -55,5 +57,15 @@ public class NewsCrawlingServiceImpl implements NewsCrawlingService {
     @Override
     public List<String> dailyKeyword() {
         return newscrawlingMapper.dailyKeyword();
+    }
+
+    @Override
+    public List<NewsDataVo> searchByPopular(SearchDto searchDto) {
+        return newscrawlingMapper.searchByPopular(searchDto);
+    }
+
+    @Override
+    public List<String> weeklyKeyword() {
+        return newscrawlingMapper.weeklyKeyword();
     }
 }

@@ -5,6 +5,7 @@ public enum SEARCH_TYPE {
     TITLE("TITLE", "title"),
 
     CONTENT("CONTENT", "content"),
+    EMOTICON("EMOTICON", "emoticon"),
     KEYWORD("KEYWORD", "keyword");
 
 

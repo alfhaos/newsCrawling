@@ -27,4 +27,10 @@ public interface NewsCrawlingService {
 
     // 일별 키워드 검색
     List<String> dailyKeyword();
+
+    // 사용자 인기 검색
+    List<NewsDataVo> searchByPopular(SearchDto searchDto);
+
+    // 주간 키워드 검색
+    List<String> weeklyKeyword();
 }

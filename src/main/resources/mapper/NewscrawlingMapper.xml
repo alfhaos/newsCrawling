@@ -4,6 +4,23 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.news.newsCrawling.mapper.NewsCrawlingMapper">
+    <resultMap id="NewsDataVoResultMap" type="com.news.newsCrawling.model.vo.NewsDataVo">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="content" property="content" />
+        <result column="publisher" property="publisher" />
+        <result column="url" property="url" />
+        <result column="view_cnt" property="viewCnt" />
+        <result column="comment_cnt" property="commentCnt" />
+        <result column="create_at" property="createAt" />
+        <result column="recommand_emotion_score" property="recommandEmotionScore" />
+        <result column="like_emotion_score" property="likeEmotionScore" />
+        <result column="impressed_emotion_score" property="impressedEmotionScore" />
+        <result column="angry_emotion_score" property="angryEmotionScore" />
+        <result column="sad_emotion_score" property="sadEmotionScore" />
+        <result column="depth" property="depth" />
+        <result column="site_type" property="siteType" />
+    </resultMap>
 
     <insert id="saveAll" parameterType="list" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO "NEWS_DATA" (
@@ -76,9 +93,9 @@
     </insert>
 
 
-    <select id="searchByKeywords" parameterType="com.news.newsCrawling.model.common.SearchDto" resultType="com.news.newsCrawling.model.vo.NewsDataVo">
+    <select id="searchByKeywords" parameterType="com.news.newsCrawling.model.common.SearchDto" resultMap="NewsDataVoResultMap">
         SELECT
-            n.id, -- 테이블 별칭을 명시적으로 추가
+            n.id,
             n.title,
             n.content,
             n.publisher,
@@ -98,7 +115,7 @@
         WHERE k.keyword LIKE CONCAT('%', #{keyword}, '%')
     </select>
 
-    <select id="searchByTitleAndContent" parameterType="com.news.newsCrawling.model.common.SearchDto" resultType="com.news.newsCrawling.model.vo.NewsDataVo">
+    <select id="searchByTitleAndContent" parameterType="com.news.newsCrawling.model.common.SearchDto" resultMap="NewsDataVoResultMap">
         SELECT
             id,
             title,
@@ -134,6 +151,73 @@
                                            REPLACE(keyword, '[', ''), ']', ''), ', ')) AS single_keyword
             FROM "KEYWORDS"
             WHERE DATE(create_at) = CURRENT_DATE
+            )
+        SELECT single_keyword
+        FROM exploded_keywords
+        GROUP BY single_keyword
+        ORDER BY COUNT(*) DESC
+        LIMIT 5;
+    </select>
+
+    <select id="searchByPopular" resultMap="NewsDataVoResultMap">
+        SELECT
+            id,
+            title,
+            content,
+            publisher,
+            url,
+            view_cnt                 AS viewCnt,
+            comment_cnt              AS commentCnt,
+            create_at                AS createAt,
+            recommand_emotion_score  AS recommandEmotionScore,
+            like_emotion_score       AS likeEmotionScore,
+            impressed_emotion_score  AS impressedEmotionScore,
+            angry_emotion_score      AS angryEmotionScore,
+            sad_emotion_score        AS sadEmotionScore,
+            depth,
+            site_type                AS siteType
+        FROM (
+            SELECT
+                id,
+                title,
+                content,
+                publisher,
+                url,
+                view_cnt,
+                comment_cnt,
+                create_at,
+                recommand_emotion_score,
+                like_emotion_score,
+                impressed_emotion_score,
+                angry_emotion_score,
+                sad_emotion_score,
+                depth,
+                site_type,
+                (recommand_emotion_score + like_emotion_score + impressed_emotion_score + angry_emotion_score + sad_emotion_score) AS totalEmotionScore
+            FROM "NEWS_DATA"
+            <where>
+                <if test="searchDate != null">
+                    create_at >=
+                    CASE
+                    WHEN #{searchDate} = 'DAILY' THEN CURRENT_DATE
+                    WHEN #{searchDate} = 'WEEKLY' THEN CURRENT_DATE - INTERVAL '7' DAY
+                    END
+                </if>
+            </where>
+            ) A
+        ORDER BY
+        A.totalEmotionScore DESC
+        LIMIT 10
+    </select>
+
+    <select id="weeklyKeyword" resultType="String">
+        WITH exploded_keywords AS (
+            SELECT UNNEST(
+                           STRING_TO_ARRAY(
+                                   REPLACE(
+                                           REPLACE(keyword, '[', ''), ']', ''), ', ')) AS single_keyword
+            FROM "KEYWORDS"
+            WHERE DATE(create_at) >= CURRENT_DATE - INTERVAL '7' DAY
             )
         SELECT single_keyword
         FROM exploded_keywords
