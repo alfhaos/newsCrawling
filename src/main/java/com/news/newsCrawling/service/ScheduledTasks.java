@@ -1,6 +1,7 @@
 package com.news.newsCrawling.service;
 
 import com.news.newsCrawling.model.common.SearchDto;
+import com.news.newsCrawling.model.contants.AGENT_ROLE;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.contants.SEARCH_DATE;
 import com.news.newsCrawling.model.contants.SEARCH_TYPE;
@@ -8,6 +9,7 @@ import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.command.CommandFactory;
 import com.news.newsCrawling.service.command.CommandInterface;
+import com.news.newsCrawling.util.VectorDatabaseUtil;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,13 +27,20 @@ public class ScheduledTasks {
     private final NewsCrawlingService newscrawlingService;
     private final CommandFactory commandFactory;
     private final EmailService emailService;
+    private final VectorDatabaseUtil vectorDatabaseUtil;
 
     @Value("${crawling.sites.daum.url}")
     private String daumUrl;
 
+    @Value("${agent.role}")
+    private String agentRole;
+
     // 매일 오전 9시에 뉴스 크롤링 작업 실행
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 49 19 * * ?")
     public void crawlingDailyWithNewsData() throws Exception {
+        if(agentRole.equals(AGENT_ROLE.WORKER.name())) {
+            return;
+        }
         CommandInterface command = commandFactory.getCommand(COMMAND_SITE_TYPE.DAUM.getValue());
         MessageVo messageVo = MessageVo.builder()
                 .url(daumUrl)
@@ -43,14 +52,20 @@ public class ScheduledTasks {
     }
 
     // 매일 오전 12시에 이메일 발송 작업 실행
-    @Scheduled(cron = "0 0 12 * * ?")
+    @Scheduled(cron = "0 10 15 * * ?")
     public void sendEmailDaily() throws MessagingException {
+        if(agentRole.equals(AGENT_ROLE.WORKER.name())) {
+            return;
+        }
         sendEamil(SEARCH_DATE.DAILY);
     }
 
     // 매주 월요일 오전 9시에 실행
     @Scheduled(cron = "0 0 9 ? * MON")
     public void sendEmailWeekly() throws MessagingException {
+        if(agentRole.equals(AGENT_ROLE.WORKER.name())) {
+            return;
+        }
         sendEamil(SEARCH_DATE.WEEKLY);
     }
 
@@ -72,6 +87,11 @@ public class ScheduledTasks {
             keywordList.put(keyword, searchResults);
         }
 
-        emailService.sendEmail(keywordList, popularList, searchDate);
+        for (String s : keywordList.keySet()) {
+            List<NewsDataVo> newsDataVos = keywordList.get(s);
+            vectorDatabaseUtil.ingestSegments(NewsDataVo.convertToTextSegments(newsDataVos, s));
+        }
+
+//        emailService.sendEmail(keywordList, popularList, searchDate);
     }
 }

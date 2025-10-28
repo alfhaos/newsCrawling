@@ -13,6 +13,7 @@ import com.news.newsCrawling.service.command.CommandInterface;
 import com.news.newsCrawling.util.CommonResponse;
 import com.news.newsCrawling.util.KeyWordUtil;
 import com.news.newsCrawling.util.TextRankKeywordExtractor;
+import com.news.newsCrawling.util.VectorDatabaseUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class newsController {
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
     private final EmailService emailService;
+    private final VectorDatabaseUtil vectorDatabaseUtil;
     @GetMapping("/")
     private CommonResponse<Object> test() throws Exception {
 
@@ -115,8 +117,11 @@ public class newsController {
             List<NewsDataVo> searchResults = newscrawlingService.searchByKeyword(searchDto);
             keywordList.put(keyword, searchResults);
         }
-
-        emailService.sendEmail(keywordList, popularList, SEARCH_DATE.WEEKLY);
+        for (String s : keywordList.keySet()) {
+            List<NewsDataVo> newsDataVos = keywordList.get(s);
+            vectorDatabaseUtil.ingestSegments(NewsDataVo.convertToTextSegments(newsDataVos, s));
+        }
+//        emailService.sendEmail(keywordList, popularList, SEARCH_DATE.WEEKLY);
         return new CommonResponse<>(keywordList);
     }
 }

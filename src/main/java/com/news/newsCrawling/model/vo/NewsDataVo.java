@@ -2,6 +2,8 @@ package com.news.newsCrawling.model.vo;
 
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.util.CommonUtil;
+import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.segment.TextSegment;
 import lombok.Builder;
 import lombok.Data;
 import org.openqa.selenium.By;
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -123,5 +126,25 @@ public class NewsDataVo {
                 .angryEmotionScore(Integer.parseInt(emoticonList.get(3).getText()))
                 .sadEmotionScore(Integer.parseInt(emoticonList.get(4).getText()))
                 .build();
+    }
+
+    public static List<TextSegment> convertToTextSegments(List<NewsDataVo> newsDataList, String keyword) {
+        return newsDataList.stream()
+                .map(news -> {
+                    // 메타데이터 생성
+                    Metadata metadata = new Metadata();
+                    metadata.put("title", news.getTitle());
+                    metadata.put("url", news.getUrl());
+                    metadata.put("publisher", news.getPublisher());
+                    metadata.put("createdAt", news.getCreateAt().toString());
+
+                    if(keyword != null && !keyword.isEmpty()) {
+                        metadata.put("keyword", keyword);
+                    }
+
+                    // TextSegment 생성
+                    return new TextSegment(news.getContent(), metadata);
+                })
+                .collect(Collectors.toList());
     }
 }

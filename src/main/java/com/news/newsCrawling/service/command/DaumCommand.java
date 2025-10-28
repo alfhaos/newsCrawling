@@ -8,11 +8,9 @@ import com.news.newsCrawling.model.contants.DATA_SELECTOR;
 import com.news.newsCrawling.model.vo.KeywordVo;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
+import com.news.newsCrawling.service.LLMService;
 import com.news.newsCrawling.service.NewsCrawlingService;
-import com.news.newsCrawling.util.KeyWordUtil;
-import com.news.newsCrawling.util.RedisUtil;
-import com.news.newsCrawling.util.SeleniumCrawlingUtil;
-import com.news.newsCrawling.util.TextRankKeywordExtractor;
+import com.news.newsCrawling.util.*;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
@@ -21,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -36,7 +35,7 @@ public class DaumCommand implements CommandInterface {
     private final KafkaTemplate<String, MessageVo> kafkaTemplate;
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
-
+    private final VectorDatabaseUtil vectorDatabaseUtil;
     @Value("${agent.topic}")
     private String topic;
 
@@ -95,6 +94,7 @@ public class DaumCommand implements CommandInterface {
 //        saveToDatabase(list);
     }
 
+    @Transactional
     @Override
     public void saveToDatabase(List<MessageVo> messageList) throws IOException {
         List<NewsDataVo> savedList = new ArrayList<>();
@@ -154,6 +154,7 @@ public class DaumCommand implements CommandInterface {
         // DB 저장
         if(!savedList.isEmpty()){
             newscrawlingService.saveAll(savedList);
+            vectorDatabaseUtil.ingestSegments(NewsDataVo.convertToTextSegments(savedList, COMMAND_SITE_TYPE.DAUM.getValue()));
         }
 
         List<String> corpus = redisUtil.getCorpus();
