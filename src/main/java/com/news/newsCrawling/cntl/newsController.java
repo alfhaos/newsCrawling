@@ -7,6 +7,7 @@ import com.news.newsCrawling.model.contants.SEARCH_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.EmailService;
+import com.news.newsCrawling.service.LLMService;
 import com.news.newsCrawling.service.NewsCrawlingService;
 import com.news.newsCrawling.service.command.CommandFactory;
 import com.news.newsCrawling.service.command.CommandInterface;
@@ -29,7 +30,7 @@ public class newsController {
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
     private final EmailService emailService;
-    private final VectorDatabaseUtil vectorDatabaseUtil;
+    private final LLMService llmService;
     @GetMapping("/")
     private CommonResponse<Object> test() throws Exception {
 
@@ -96,7 +97,7 @@ public class newsController {
             keywordList.put(keyword, searchResults);
         }
 
-        emailService.sendEmail(keywordList, popularList, SEARCH_DATE.DAILY);
+        emailService.sendEmail(keywordList, popularList, SEARCH_DATE.DAILY, null);
         return new CommonResponse<>(keywordList);
     }
 
@@ -117,11 +118,9 @@ public class newsController {
             List<NewsDataVo> searchResults = newscrawlingService.searchByKeyword(searchDto);
             keywordList.put(keyword, searchResults);
         }
-        for (String s : keywordList.keySet()) {
-            List<NewsDataVo> newsDataVos = keywordList.get(s);
-            vectorDatabaseUtil.ingestSegments(NewsDataVo.convertToTextSegments(newsDataVos, s));
-        }
-//        emailService.sendEmail(keywordList, popularList, SEARCH_DATE.WEEKLY);
+        HashMap<String, String> summarizeWeeklyNewsByKeywords = llmService.summarizeWeeklyNewsByKeywords(keywordList);
+
+        emailService.sendEmail(keywordList, popularList, searchDto.getSearchDate(), summarizeWeeklyNewsByKeywords);
         return new CommonResponse<>(keywordList);
     }
 }

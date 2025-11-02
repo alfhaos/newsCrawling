@@ -7,11 +7,9 @@ import com.news.newsCrawling.model.contants.DATA_SELECTOR;
 import com.news.newsCrawling.model.vo.KeywordVo;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
+import com.news.newsCrawling.service.LLMService;
 import com.news.newsCrawling.service.NewsCrawlingService;
-import com.news.newsCrawling.util.KeyWordUtil;
-import com.news.newsCrawling.util.RedisUtil;
-import com.news.newsCrawling.util.SeleniumCrawlingUtil;
-import com.news.newsCrawling.util.TextRankKeywordExtractor;
+import com.news.newsCrawling.util.*;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Component;
@@ -32,7 +30,8 @@ public class DaumRecursiveCommand implements CommandInterface {
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
     private final RedisUtil redisUtil;
-
+    private final VectorDatabaseUtil vectorDatabaseUtil;
+    private final LLMService llmService;
     // 사이드기사에 대해서는 재귀적 크롤링 x (메인기사에서만 재귀적 크롤링)
     @Override
     public void execute(MessageVo message) throws Exception {
@@ -90,6 +89,11 @@ public class DaumRecursiveCommand implements CommandInterface {
                     .build();
 
             keywordVoList.add(keywordVo);
+
+            NewsDataVo result = llmService.summarizeAndEmbed(data, commonKeywords.isEmpty() ? "" : commonKeywords.get(0));
+
+            // 요약문 + 임베딩 DB 저장
+            newscrawlingService.updateSummaryAndEmbedding(result);
         }
 
         // 키워드 DB 저장

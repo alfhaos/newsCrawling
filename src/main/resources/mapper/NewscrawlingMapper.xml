@@ -20,6 +20,8 @@
         <result column="sad_emotion_score" property="sadEmotionScore" />
         <result column="depth" property="depth" />
         <result column="site_type" property="siteType" />
+        <result column="summary_content" property="summaryContent" />
+        <result column="embedding" property="embedding" typeHandler="com.news.newsCrawling.config.VectorTypeHandler"/>
     </resultMap>
 
     <insert id="saveAll" parameterType="list" useGeneratedKeys="true" keyProperty="id">
@@ -109,7 +111,8 @@
             n.angry_emotion_score      AS angryEmotionScore,
             n.sad_emotion_score        AS sadEmotionScore,
             n.depth,
-            n.site_type                AS siteType
+            n.site_type                AS siteType,
+            n.embedding                AS embedding
         FROM "NEWS_DATA" n
                  JOIN "KEYWORDS" k ON n.id = k.id
         WHERE k.keyword LIKE CONCAT('%', #{keyword}, '%')
@@ -224,5 +227,30 @@
         GROUP BY single_keyword
         ORDER BY COUNT(*) DESC
         LIMIT 5;
+    </select>
+
+    <update id="updateEmbeddingData">
+        UPDATE "NEWS_DATA"
+        SET embedding = #{output, jdbcType=OTHER}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateSummaryAndEmbedding">
+        UPDATE "NEWS_DATA"
+        SET embedding = #{output, jdbcType=OTHER}
+        , summary_content = #{summaryContent}
+        WHERE id = #{id}
+    </update>
+    <!-- 유사도 기반 뉴스 검색 -->
+    <select id="searchSimilarNews" parameterType="map" resultMap="NewsDataVoResultMap">
+        SELECT
+            id,
+            title,
+            content
+        FROM
+            "NEWS_DATA"
+        ORDER BY
+            embedding &lt;-&gt; #{embedding, jdbcType=OTHER}
+        LIMIT #{topN}
     </select>
 </mapper>

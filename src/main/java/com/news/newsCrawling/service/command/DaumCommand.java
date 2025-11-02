@@ -2,6 +2,7 @@ package com.news.newsCrawling.service.command;
 
 import com.news.newsCrawling.config.CrawlingSiteConfig;
 import com.news.newsCrawling.config.CrawlingSiteConfig.Site;
+import com.news.newsCrawling.model.common.TextSegmentDto;
 import com.news.newsCrawling.model.contants.AGENT_ROLE;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.contants.DATA_SELECTOR;
@@ -36,6 +37,7 @@ public class DaumCommand implements CommandInterface {
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
     private final VectorDatabaseUtil vectorDatabaseUtil;
+    private final LLMService llmService;
     @Value("${agent.topic}")
     private String topic;
 
@@ -94,7 +96,6 @@ public class DaumCommand implements CommandInterface {
 //        saveToDatabase(list);
     }
 
-    @Transactional
     @Override
     public void saveToDatabase(List<MessageVo> messageList) throws IOException {
         List<NewsDataVo> savedList = new ArrayList<>();
@@ -154,7 +155,6 @@ public class DaumCommand implements CommandInterface {
         // DB 저장
         if(!savedList.isEmpty()){
             newscrawlingService.saveAll(savedList);
-            vectorDatabaseUtil.ingestSegments(NewsDataVo.convertToTextSegments(savedList, COMMAND_SITE_TYPE.DAUM.getValue()));
         }
 
         List<String> corpus = redisUtil.getCorpus();
@@ -177,6 +177,10 @@ public class DaumCommand implements CommandInterface {
                     .build();
 
             keywordVoList.add(keywordVo);
+            NewsDataVo result = llmService.summarizeAndEmbed(newsDataVo, commonKeywords.isEmpty() ? "" : commonKeywords.get(0));
+
+            // 요약문 + 임베딩 DB 저장
+            newscrawlingService.updateSummaryAndEmbedding(result);
         }
 
         // 키워드 DB 저장

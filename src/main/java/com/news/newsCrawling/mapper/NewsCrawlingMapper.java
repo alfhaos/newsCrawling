@@ -27,4 +27,10 @@ public interface NewsCrawlingMapper{
     List<NewsDataVo> searchByPopular(SearchDto searchDto);
 
     List<String> weeklyKeyword();
+
+    void updateEmbeddingData(Long id, float[] output);
+
+    List<NewsDataVo> searchSimilarNews(Object embedding, int topN);
+
+    void updateSummaryAndEmbedding(Long id, float[] output, String summaryContent);
 }

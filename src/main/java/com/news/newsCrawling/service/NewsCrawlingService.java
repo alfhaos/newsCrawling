@@ -33,4 +33,7 @@ public interface NewsCrawlingService {
 
     // 주간 키워드 검색
     List<String> weeklyKeyword();
+
+    // 요약 및 임베딩 업데이트
+    void updateSummaryAndEmbedding(NewsDataVo result);
 }

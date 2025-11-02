@@ -11,6 +11,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +25,9 @@ public class EmailService {
     private String target;
     @Value("${spring.mail.username}") // 발신자 이메일 주소를 설정 파일에서 가져옴
     private String senderEmail;
-    public void sendEmail(Map<String, List<NewsDataVo>> keywordNews, List<NewsDataVo> popularNews, SEARCH_DATE searchDate) throws MessagingException {
+    public void sendEmail(Map<String, List<NewsDataVo>> keywordNews
+            , List<NewsDataVo> popularNews, SEARCH_DATE searchDate
+            , HashMap<String, String> summarizeWeeklyNewsByKeywords) throws MessagingException {
         // MimeMessage 생성
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -64,6 +67,15 @@ public class EmailService {
         for (Map.Entry<String, List<NewsDataVo>> entry : keywordNews.entrySet()) {
             htmlContent.append("<div class='keyword-section' style='margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);'>");
             htmlContent.append("<h3 style='color: #007BFF; margin-bottom: 10px;'>").append(entry.getKey()).append("</h3>");
+            // 키워드 요약 내용 추가
+            if (searchDate.equals(SEARCH_DATE.WEEKLY) && summarizeWeeklyNewsByKeywords != null && summarizeWeeklyNewsByKeywords.containsKey(entry.getKey())) {
+                htmlContent.append("<p style='margin-bottom: 10px; color: #555; font-style: italic;'>")
+                        .append("아래는 AI가 요약한 내용입니다:")
+                        .append("</p>");
+                htmlContent.append("<p style='margin-bottom: 10px; color: #555;'>")
+                        .append(summarizeWeeklyNewsByKeywords.get(entry.getKey()))
+                        .append("</p>");
+            }
             for (NewsDataVo news : entry.getValue()) {
                 htmlContent.append("<div class='news-item' style='margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;'>");
                 htmlContent.append("<a href='").append(news.getUrl()).append("' style='text-decoration: none; color: #333; font-weight: bold;'>")
@@ -76,7 +88,7 @@ public class EmailService {
 
         // 감정 표현이 많이 표출된 뉴스 섹션
         htmlContent.append("<div class='section'>");
-        htmlContent.append("<h2>가장 감정 표현이 많이 표출된 뉴스</h2>");
+        htmlContent.append("<h2>가장 핫 한 뉴스</h2>");
         int rank = 1;
         for (NewsDataVo news : popularNews) {
             htmlContent.append("<div class='news-item'>");

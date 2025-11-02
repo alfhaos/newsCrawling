@@ -1,62 +1,181 @@
 package com.news.newsCrawling.service;
 
+import com.news.newsCrawling.model.common.OpenAIRequest;
+import com.news.newsCrawling.model.common.OpenAIResponse;
+import com.news.newsCrawling.model.common.TextSegmentDto;
+import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.util.VectorDatabaseUtil;
+import dev.langchain4j.data.message.ChatMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
+import java.util.Map.Entry;
+
+import static com.news.newsCrawling.model.common.OpenAIRequest.*;
+import static org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
+import static org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.*;
+import static org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
 
 @Component
 @RequiredArgsConstructor
 public class LLMService {
     private final VectorDatabaseUtil vectorDatabaseUtil;
+    private final OpenAiApi openAiApi;
 
-    public String queryDatabaseAndGenerateResponse(String userQuery) {
-        // 1️⃣ 사용자 질문 임베딩 생성
-//        Embedding queryEmbedding = vectorDatabaseUtil.getEmbeddingModel().embed(userQuery).content();
+    @Autowired
+    private RestTemplate restTemplate;
+    @Value("${spring.ai.openai.api-key}")
+    private String apikey;
+    @Value("${spring.ai.openai.base-url}")
+    private String baseUrl;
 
-        // 2️⃣ Chroma에서 관련 문서 검색
-//        List<EmbeddingMatch> matches = vectorDatabaseUtil.getEmbeddingStore().findRelevant(queryEmbedding, 5);
+    @Value("${spring.ai.openai.text.options.model}")
+    private String model;
+    @Value("${spring.ai.openai.text.options.temperature}")
+    private Double temperature;
 
-        // 3️⃣ 문맥(context) 구성
-//        String context = matches.stream()
-//                .map(match -> match.embedded().toString()) // ✅ text() → embedded()
-//                .collect(Collectors.joining("\n\n"));
-//
-//        // 4️⃣ LLM 프롬프트 구성
-//        // 4️⃣ 프롬프트 구성
-//        String prompt = """
-//                아래는 관련된 뉴스 기사입니다.
-//                1.사용자의 질문에 답변하세요.
-//                2.한국어로 자연스럽고 간결하게 작성해주세요.
-//                3.주간 뉴스 요약본을 작성하는 느낌으로 작성해주세요.
-//                4.키워드에 맞는 뉴스 내용을 중심으로 작성해주세요.
-//                5.출처는 언급하지 마세요.
-//                뉴스 문맥:
-//                %s
-//
-//                사용자 질문:
-//                %s
-//                """.formatted(context, userQuery);
-//
-//        // 5️⃣ 요청 파라미터 설정
-//        Parameters parameters = Parameters.builder()
-//                .temperature(temperature)
-//                .maxNewTokens(maxTokens)
-//                .build();
-//
-//        TextGenerationRequest request = TextGenerationRequest.builder()
-//                .inputs(prompt)
-//                .parameters(parameters)
-//                .build();
-//
-//        // 6️⃣ Hugging Face 모델 호출
-//        TextGenerationResponse response = huggingFaceClient.generate(request);
-//
-//        // 7️⃣ 결과 반환
-//        if (response.generatedText() != null && !response.generatedText().isEmpty()) {
-//            return response.generatedText();
-//        } else {
-//            return "모델로부터 응답을 받지 못했습니다.";
-//        }
-        return "";
+    // 키워드 기반으로 뉴스 검색후 요약 해주는 함수
+    public HashMap<String, String> summarizeWeeklyNewsByKeywords(Map<String, List<NewsDataVo>> keywordNewsMap) {
+        HashMap<String, String> keywordSummaries = new HashMap<>();
+
+        for (String keyword : keywordNewsMap.keySet()) {
+            // ✅ 1️⃣ 키워드 임베딩 가져오기
+            float[] keywordEmbedding = vectorDatabaseUtil.getEmbeddingForKeyword(keyword);
+
+            // ✅ 2️⃣ 벡터DB에서 해당 키워드와 유사한 뉴스 3개 검색
+            List<NewsDataVo> relatedNewsList = vectorDatabaseUtil.searchSimilarNews(keywordEmbedding, 3);
+
+            // ✅ 3️⃣ 뉴스 본문 텍스트 구성
+            StringBuilder newsContextBuilder = new StringBuilder();
+            for (int i = 0; i < relatedNewsList.size(); i++) {
+                NewsDataVo news = relatedNewsList.get(i);
+                String content = news.getContent();
+
+                // 본문 길이 제한 (1,000자까지만)
+//                if (content.length() > 1000) {
+//                    content = content.substring(0, 1000) + "...";
+//                }
+
+                newsContextBuilder.append("- [")
+                        .append(i + 1)
+                        .append("] Content: ").append(content)
+                        .append("\n\n");
+            }
+
+            // ✅ 4️⃣ 프롬프트 구성
+            String prompt = """
+            You are an AI that summarizes weekly news by topic.
+            For the given keyword and related news articles:
+            1. Summarize the main points.
+            2. The summary should be within 3 sentences.
+            3. Write in natural and concise Korean.
+            4. Do not mention the news sources.
+            """ + "\n\nKeyword: " + keyword + "\n\nNews Context:\n" + newsContextBuilder;
+
+            ChatCompletionMessage systemMessage = new ChatCompletionMessage(
+                    "You are a professional news summarizer.", Role.SYSTEM);
+            ChatCompletionMessage userMessage = new ChatCompletionMessage(prompt, Role.USER);
+
+            ChatCompletionRequest request = new ChatCompletionRequest(
+                    List.of(systemMessage, userMessage),
+                    "gpt-4o", // 모델
+                    0.7,      // temperature
+                    false
+            );
+
+            // ✅ 5️⃣ OpenAI API 호출
+            ResponseEntity<ChatCompletion> response = openAiApi.chatCompletionEntity(request);
+
+            // ✅ 6️⃣ 결과 저장
+            String summary = response.getBody().choices().get(0).message().content();
+            keywordSummaries.put(keyword, summary);
+        }
+
+        return keywordSummaries;
+    }
+
+    // 요약본 생성 + 요약본 임베딩 생성 함수
+    public NewsDataVo summarizeAndEmbed(NewsDataVo news, String keyword) {
+        try {
+            // 🧠 1️⃣ System prompt — 영어로 작성
+            String systemPrompt = """
+                    You are an AI assistant that summarizes news articles.
+                    Your task is to read the given news article and summarize it accurately.
+                    Focus on key people, events, causes, and implications.
+                    Keep the summary clear and concise (about 1-3 sentences).
+                    The summary should be written in **Korean**, even though instructions are in English.
+                    emphasize and highlight the provided keyword.
+                    Output only the summary text, without additional explanations.
+                    
+                    """;
+
+            // 🗞 2️⃣ User prompt — 뉴스 제목 및 본문 삽입
+            String userPrompt = """
+                    Summarize the following news article in Korean based on the above instructions.
+
+                    [Title] %s
+                    [Ketword] %s
+                    [Content]
+                    %s
+                    """.formatted(news.getTitle(),keyword, news.getContent());
+//            ChatCompletionMessage systemMessage = new ChatCompletionMessage(
+//                    systemPrompt, Role.SYSTEM);
+//            ChatCompletionMessage userMessage = new ChatCompletionMessage("", Role.USER);
+
+            // 💬 3️⃣ LLM 요청 (요약 생성)
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(apikey);
+            Message userMessage = new Message(Role.USER.name().toLowerCase(), userPrompt);
+            Message systemMessage = new Message(Role.SYSTEM.name().toLowerCase(), systemPrompt);
+            OpenAIRequest request = new OpenAIRequest("gpt-4o", List.of(systemMessage,userMessage), 0.7);
+            HttpEntity requestEntity = new HttpEntity<>(request, headers);
+            ResponseEntity<OpenAIResponse> response = restTemplate.exchange(
+                    baseUrl, HttpMethod.POST, requestEntity, OpenAIResponse.class
+            );
+
+
+//            ChatCompletionRequest request = new ChatCompletionRequest(
+//                    List.of(systemMessage, userMessage),
+//                    "gpt-3.5-turbo", // 모델
+//                    0.7,      // temperature
+//                    false
+//            );
+//            String response = openAiApi.chatCompletionEntity(request).toString();
+            if (response == null) {
+                throw new RuntimeException("Empty response from LLM summarization.");
+            }
+
+            String summary = response.getBody().getChoices().get(0).getMessage().getContent();
+            news.setSummaryContent(summary);
+            TextSegmentDto textSegmentDto = NewsDataVo.convertToTextSegment(news, keyword);
+
+            // 🔢 4️⃣ 요약문 임베딩 생성
+            assert textSegmentDto != null;
+            float[] summaryEmbeddingInput = vectorDatabaseUtil.ingestSegmentForDto(textSegmentDto);
+
+            if (summaryEmbeddingInput == null) {
+                throw new RuntimeException("Embedding generation failed.");
+            }
+
+            // 💾 5️⃣ 결과 저장 (요약문 + 임베딩)
+            news.setSummaryContent(summary);
+            news.setEmbedding(summaryEmbeddingInput);
+            return news;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error during summarization or embedding: " + e.getMessage(), e);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.news.newsCrawling.model.vo;
 
+import com.news.newsCrawling.model.common.TextSegmentDto;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.util.CommonUtil;
 import dev.langchain4j.data.document.Metadata;
@@ -14,6 +15,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
@@ -42,6 +45,11 @@ public class NewsDataVo {
     // 메세지 필터 처리를 위한 변수
     private int depth;
     private COMMAND_SITE_TYPE siteType;
+
+    // llm 활용 요약 내용
+    private String summaryContent;
+    // 검색, 키워드 추천용 임베딩 벡터
+    private float[] embedding;
 
     // 각 사이트별로 카프카메세지 포멧
     public static List<NewsDataVo> dataFormatForMessage(List<WebElement> elements, COMMAND_SITE_TYPE siteType) {
@@ -127,24 +135,108 @@ public class NewsDataVo {
                 .sadEmotionScore(Integer.parseInt(emoticonList.get(4).getText()))
                 .build();
     }
+    public static TextSegmentDto convertToTextSegment(NewsDataVo newsData, String keyword) {
+        if (newsData.getContent() == null || newsData.getContent().isEmpty()) {
+            return null; // content가 null이거나 빈 값인 경우 null 반환
+        }
 
-    public static List<TextSegment> convertToTextSegments(List<NewsDataVo> newsDataList, String keyword) {
+        // 메타데이터 생성
+        Metadata metadata = new Metadata();
+        metadata.put("title", newsData.getTitle());
+        metadata.put("summary", newsData.getSummaryContent());
+        metadata.put("createdAt", newsData.getCreateAt().toString());
+        metadata.put("keyword", keyword);
+
+        // TextSegment 생성
+        TextSegment textSegment = new TextSegment(newsData.getContent(), metadata);
+
+        // TextSegmentDto 생성 및 반환
+        return new TextSegmentDto(newsData.getId(), textSegment);
+    }
+    public static Set<TextSegmentDto> convertToTextSegmentsList(List<NewsDataVo> newsDataList, String keyword) {
         return newsDataList.stream()
+                .filter(news -> news.getContent() != null && !news.getContent().isEmpty()) // content가 null이거나 빈 값이 아닌 경우만 처리
                 .map(news -> {
                     // 메타데이터 생성
                     Metadata metadata = new Metadata();
                     metadata.put("title", news.getTitle());
-                    metadata.put("url", news.getUrl());
-                    metadata.put("publisher", news.getPublisher());
+                    metadata.put("summary", news.getSummaryContent());
                     metadata.put("createdAt", news.getCreateAt().toString());
-
-                    if(keyword != null && !keyword.isEmpty()) {
-                        metadata.put("keyword", keyword);
-                    }
+                    metadata.put("keyword", keyword);
 
                     // TextSegment 생성
-                    return new TextSegment(news.getContent(), metadata);
+                    TextSegment textSegment = new TextSegment(news.getContent(), metadata);
+
+                    // TextSegmentDto 생성
+                    return new TextSegmentDto(news.getId(), textSegment);
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
+    }
+
+
+    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt, LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore, int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.publisher = publisher;
+        this.url = url;
+        this.viewCnt = viewCnt;
+        this.commentCnt = commentCnt;
+        this.createAt = createAt;
+        this.recommandEmotionScore = recommandEmotionScore;
+        this.likeEmotionScore = likeEmotionScore;
+        this.impressedEmotionScore = impressedEmotionScore;
+        this.angryEmotionScore = angryEmotionScore;
+        this.sadEmotionScore = sadEmotionScore;
+        this.depth = depth;
+        this.siteType = siteType;
+    }
+
+    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt, LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore, int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType, float[] embedding) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.publisher = publisher;
+        this.url = url;
+        this.viewCnt = viewCnt;
+        this.commentCnt = commentCnt;
+        this.createAt = createAt;
+        this.recommandEmotionScore = recommandEmotionScore;
+        this.likeEmotionScore = likeEmotionScore;
+        this.impressedEmotionScore = impressedEmotionScore;
+        this.angryEmotionScore = angryEmotionScore;
+        this.sadEmotionScore = sadEmotionScore;
+        this.depth = depth;
+        this.siteType = siteType;
+        this.embedding = embedding;
+    }
+
+    public NewsDataVo(Long id, String title, String content) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+    }
+    @Builder
+    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt,
+                      LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore,
+                      int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType, String summaryContent,
+                      float[] embedding) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.publisher = publisher;
+        this.url = url;
+        this.viewCnt = viewCnt;
+        this.commentCnt = commentCnt;
+        this.createAt = createAt;
+        this.recommandEmotionScore = recommandEmotionScore;
+        this.likeEmotionScore = likeEmotionScore;
+        this.impressedEmotionScore = impressedEmotionScore;
+        this.angryEmotionScore = angryEmotionScore;
+        this.sadEmotionScore = sadEmotionScore;
+        this.depth = depth;
+        this.siteType = siteType;
+        this.summaryContent = summaryContent;
+        this.embedding = embedding;
     }
 }

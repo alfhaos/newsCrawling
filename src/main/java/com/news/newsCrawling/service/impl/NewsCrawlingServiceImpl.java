@@ -68,4 +68,9 @@ public class NewsCrawlingServiceImpl implements NewsCrawlingService {
     public List<String> weeklyKeyword() {
         return newscrawlingMapper.weeklyKeyword();
     }
+
+    @Override
+    public void updateSummaryAndEmbedding(NewsDataVo result) {
+        newscrawlingMapper.updateSummaryAndEmbedding(result.getId(), result.getEmbedding(), result.getSummaryContent());
+    }
 }

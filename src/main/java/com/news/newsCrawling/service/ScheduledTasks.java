@@ -28,6 +28,7 @@ public class ScheduledTasks {
     private final CommandFactory commandFactory;
     private final EmailService emailService;
     private final VectorDatabaseUtil vectorDatabaseUtil;
+    private final LLMService llmService;
 
     @Value("${crawling.sites.daum.url}")
     private String daumUrl;
@@ -87,11 +88,8 @@ public class ScheduledTasks {
             keywordList.put(keyword, searchResults);
         }
 
-        for (String s : keywordList.keySet()) {
-            List<NewsDataVo> newsDataVos = keywordList.get(s);
-            vectorDatabaseUtil.ingestSegments(NewsDataVo.convertToTextSegments(newsDataVos, s));
-        }
+        HashMap<String, String> summarizeWeeklyNewsByKeywords = llmService.summarizeWeeklyNewsByKeywords(keywordList);
 
-//        emailService.sendEmail(keywordList, popularList, searchDate);
+        emailService.sendEmail(keywordList, popularList, searchDate, summarizeWeeklyNewsByKeywords);
     }
 }
