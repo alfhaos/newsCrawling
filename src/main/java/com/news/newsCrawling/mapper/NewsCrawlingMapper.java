@@ -30,7 +30,7 @@ public interface NewsCrawlingMapper{
 
     void updateEmbeddingData(Long id, float[] output);
 
-    List<NewsDataVo> searchSimilarNews(Object embedding, int topN);
+    List<NewsDataVo> searchSimilarNews(Object embedding, int topN, String searchDate);
 
     void updateSummaryAndEmbedding(Long id, float[] output, String summaryContent);
 }

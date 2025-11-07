@@ -85,7 +85,7 @@ public class VectorDatabaseUtil {
 
         return generatedEmbedding;
     }
-    public List<NewsDataVo> searchSimilarNews(float[] embedding, int topN) {
-        return mapper.searchSimilarNews(embedding, topN);
+    public List<NewsDataVo> searchSimilarNews(float[] embedding, int topN, String searchDate) {
+        return mapper.searchSimilarNews(embedding, topN, searchDate);
     }
 }

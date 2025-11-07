@@ -22,6 +22,7 @@
         <result column="site_type" property="siteType" />
         <result column="summary_content" property="summaryContent" />
         <result column="embedding" property="embedding" typeHandler="com.news.newsCrawling.config.VectorTypeHandler"/>
+        <result column="similarity" property="similarity" />
     </resultMap>
 
     <insert id="saveAll" parameterType="list" useGeneratedKeys="true" keyProperty="id">
@@ -246,11 +247,18 @@
         SELECT
             id,
             title,
-            content
+            summary_content,
+            embedding &lt;-&gt; #{embedding, jdbcType=OTHER} AS similarity
         FROM
             "NEWS_DATA"
+        WHERE
+            create_at >=
+                CASE
+                    WHEN #{searchDate} = 'DAILY' THEN CURRENT_DATE
+                    WHEN #{searchDate} = 'WEEKLY' THEN CURRENT_DATE - INTERVAL '7' DAY
+                END
         ORDER BY
-            embedding &lt;-&gt; #{embedding, jdbcType=OTHER}
+            similarity
         LIMIT #{topN}
     </select>
 </mapper>

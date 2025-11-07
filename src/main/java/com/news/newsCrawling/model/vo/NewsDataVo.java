@@ -51,6 +51,9 @@ public class NewsDataVo {
     // 검색, 키워드 추천용 임베딩 벡터
     private float[] embedding;
 
+    // 유사도 점수 필드 추가
+    private Double similarity;
+
     // 각 사이트별로 카프카메세지 포멧
     public static List<NewsDataVo> dataFormatForMessage(List<WebElement> elements, COMMAND_SITE_TYPE siteType) {
         if (siteType.equals(COMMAND_SITE_TYPE.DAUM)) {
@@ -238,5 +241,33 @@ public class NewsDataVo {
         this.siteType = siteType;
         this.summaryContent = summaryContent;
         this.embedding = embedding;
+    }
+
+    public NewsDataVo(Long id, String title, String summaryContent, Double similarity) {
+        this.id = id;
+        this.title = title;
+        this.summaryContent = summaryContent;
+        this.similarity = similarity;
+    }
+
+    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt, LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore, int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType, String summaryContent, float[] embedding, Double similarity) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.publisher = publisher;
+        this.url = url;
+        this.viewCnt = viewCnt;
+        this.commentCnt = commentCnt;
+        this.createAt = createAt;
+        this.recommandEmotionScore = recommandEmotionScore;
+        this.likeEmotionScore = likeEmotionScore;
+        this.impressedEmotionScore = impressedEmotionScore;
+        this.angryEmotionScore = angryEmotionScore;
+        this.sadEmotionScore = sadEmotionScore;
+        this.depth = depth;
+        this.siteType = siteType;
+        this.summaryContent = summaryContent;
+        this.embedding = embedding;
+        this.similarity = similarity;
     }
 }

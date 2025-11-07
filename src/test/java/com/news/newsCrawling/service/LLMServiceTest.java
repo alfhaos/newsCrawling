@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.ai.openai.api.OpenAiApi.*;
@@ -30,6 +31,8 @@ class LLMServiceTest {
 
     @Autowired
     private LLMService llmService;
+    @Autowired
+    private NewsCrawlingService newsCrawlingService;
 
     @Autowired
     private OpenAiApi openAiApi;
@@ -71,5 +74,15 @@ class LLMServiceTest {
         System.out.println(response.getBody().getChoices().get(0).getMessage().getContent());
         assertThat(response).isNotNull();
         assertThat(response.getBody()).isNotNull();
+    }
+    @Test
+    @Rollback(value = true)
+    @Transactional
+    public void testLLMKeywordReWriting() throws Exception {
+
+        List<String> keywords = newsCrawlingService.weeklyKeyword();
+        String response = llmService.keywordReWriting(keywords);
+        assertThat(response).isNotNull();
+        System.out.println(response);
     }
 }

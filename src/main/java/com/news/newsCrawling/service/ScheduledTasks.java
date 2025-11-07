@@ -36,6 +36,8 @@ public class ScheduledTasks {
     @Value("${agent.role}")
     private String agentRole;
 
+    private static final int topN = 10;
+
     // 매일 오전 9시에 뉴스 크롤링 작업 실행
     @Scheduled(cron = "0 49 19 * * ?")
     public void crawlingDailyWithNewsData() throws Exception {
@@ -88,8 +90,12 @@ public class ScheduledTasks {
             keywordList.put(keyword, searchResults);
         }
 
-        HashMap<String, String> summarizeWeeklyNewsByKeywords = llmService.summarizeWeeklyNewsByKeywords(keywordList);
+        String llmResult = llmService.keywordReWriting(keywords);
+        float[] llmEmbedding = vectorDatabaseUtil.getEmbeddingForKeyword(llmResult);
+        List<NewsDataVo> refinedKeywords = vectorDatabaseUtil.searchSimilarNews(llmEmbedding, topN, searchDate.name());
+        String llmSummaryResult = llmService.newsSummary(keywords, refinedKeywords);
+//        HashMap<String, String> summarizeWeeklyNewsByKeywords = llmService.summarizeWeeklyNewsByKeywords(keywordList);
 
-        emailService.sendEmail(keywordList, popularList, searchDate, summarizeWeeklyNewsByKeywords);
+        emailService.sendEmail(keywordList, popularList, searchDate, llmSummaryResult);
     }
 }

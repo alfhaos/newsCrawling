@@ -9,6 +9,7 @@ import com.news.newsCrawling.model.vo.NewsDataVo;
 import com.news.newsCrawling.service.EmailService;
 import com.news.newsCrawling.service.LLMService;
 import com.news.newsCrawling.service.NewsCrawlingService;
+import com.news.newsCrawling.service.ScheduledTasks;
 import com.news.newsCrawling.service.command.CommandFactory;
 import com.news.newsCrawling.service.command.CommandInterface;
 import com.news.newsCrawling.util.CommonResponse;
@@ -30,7 +31,7 @@ public class newsController {
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
     private final EmailService emailService;
-    private final LLMService llmService;
+    private final ScheduledTasks scheduledTasks;
     @GetMapping("/")
     private CommonResponse<Object> test() throws Exception {
 
@@ -82,45 +83,14 @@ public class newsController {
     @GetMapping("/test/mail")
     private CommonResponse<Object> mailTest(@RequestBody SearchDto searchDto) throws Exception {
 
-        searchDto.setSearchType(SEARCH_TYPE.EMOTICON);
-        searchDto.setSearchDate(SEARCH_DATE.DAILY);
-        // 사용자가 반응한 이모티콘 갯수 랭크 기반 검색 결과 추출
-        List<NewsDataVo> popularList = newscrawlingService.searchByPopular(searchDto);
-
-        // 키워드 기반 검색 결과 추출
-        List<String> keywords = newscrawlingService.dailyKeyword();
-        searchDto.setSearchType(SEARCH_TYPE.KEYWORD);
-        Map<String, List<NewsDataVo>> keywordList = new HashMap<>();
-        for (String keyword : keywords) {
-            searchDto.setKeyword(keyword);
-            List<NewsDataVo> searchResults = newscrawlingService.searchByKeyword(searchDto);
-            keywordList.put(keyword, searchResults);
-        }
-
-        emailService.sendEmail(keywordList, popularList, SEARCH_DATE.DAILY, null);
-        return new CommonResponse<>(keywordList);
+        scheduledTasks.sendEmailDaily();
+        return new CommonResponse<>(null);
     }
 
     @GetMapping("/test/mail/weekly")
     private CommonResponse<Object> mailTestWeekly(@RequestBody SearchDto searchDto) throws Exception {
 
-        searchDto.setSearchType(SEARCH_TYPE.EMOTICON);
-        searchDto.setSearchDate(SEARCH_DATE.WEEKLY);
-        // 사용자가 반응한 이모티콘 갯수 랭크 기반 검색 결과 추출
-        List<NewsDataVo> popularList = newscrawlingService.searchByPopular(searchDto);
-
-        // 키워드 기반 검색 결과 추출
-        List<String> keywords = newscrawlingService.weeklyKeyword();
-        searchDto.setSearchType(SEARCH_TYPE.KEYWORD);
-        Map<String, List<NewsDataVo>> keywordList = new HashMap<>();
-        for (String keyword : keywords) {
-            searchDto.setKeyword(keyword);
-            List<NewsDataVo> searchResults = newscrawlingService.searchByKeyword(searchDto);
-            keywordList.put(keyword, searchResults);
-        }
-        HashMap<String, String> summarizeWeeklyNewsByKeywords = llmService.summarizeWeeklyNewsByKeywords(keywordList);
-
-        emailService.sendEmail(keywordList, popularList, searchDto.getSearchDate(), summarizeWeeklyNewsByKeywords);
-        return new CommonResponse<>(keywordList);
+        scheduledTasks.sendEmailWeekly();
+        return new CommonResponse<>(null);
     }
 }
