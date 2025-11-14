@@ -11,7 +11,7 @@
 
 📊 시스템 아키텍처
 
-![newCrawling (1).jpg](..%2F..%2FUsers%2Falfha%2FOneDrive%2F%EB%B0%94%ED%83%95%20%ED%99%94%EB%A9%B4%2Fstudy%2Fproject%2FnewsCrawlingSideProject%2FnewCrawling%20%281%29.jpg)
+![newCrawling (1).jpg](newCrawling%20%281%29.jpg)
 
 📌 뉴스 크롤링 및 키워드 추출
 1. pring Scheduler를 활용하여 주기적으로 Kafka 토픽에 URL 메시지를 발행하는 Producer를 실행합니다. 
@@ -82,6 +82,7 @@
   - 빌드 툴 : Gradle
 
 📌 역할 정리
+
 1️⃣ 메인 서버 (URL Producer)
   - 특정 사이트의 초기 URL(seed URL)에서 첫 페이지 HTML을 요청
   - HTML에서 페이지 내 링크를 추출
