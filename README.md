@@ -47,10 +47,7 @@
     - 보통 메인에 주요기사들이있고 상세 기사 사이드쪽에 추천기사 등 사이드 기사들이 있음 
     - url 큐에 넣는 메인 에이전트는 메인에 주요 기사들을 추출해서 url을 카프카에 전송
     - 각 크롤러 워커들은 url 큐에서 url을 받고 메인기사, 댓글, 조회수 등 정보 추출을 하고 사이드에 기사들이있을경우
-    - 사이드 기사들을 추출해서 url 큐에 다시 전송
-    - Bloom Filter 및 depth를 설정하여 무한 크롤링 방지
-    
-2. 수집된 뉴스 저장 및 검색 API
+    - 사이드 기사사들 수집된 뉴스 저장 및 검색 API
   - DB에 기사 저장
   - 제목/키워드 기반 검색 REST API 제공
 
@@ -78,6 +75,7 @@
   - AI: SPRING AI, Langchain, OpenAI API
   - 웹 크롤링 : SELENIUM
   - 스케줄링 : Spring Scheduler (@Scheduled)
+  - 스케줄링 : Spring Scheduler (@Scheduled)
   - DB : Pgvector, PostgreSQL
   - 빌드 툴 : Gradle
 
@@ -101,5 +99,3 @@
 
 3️⃣ AI
   - 임베딩을 활용한 백터 검색
-  - RAG 패턴을 활용한 뉴스 요약
-  - 키워드 추출 및 트렌드 분석
