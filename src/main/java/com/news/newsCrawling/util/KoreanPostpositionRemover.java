@@ -3,7 +3,6 @@ package com.news.newsCrawling.util;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.regex.Pattern;
-
 @Component
 public class KoreanPostpositionRemover {
 

@@ -1,7 +1,6 @@
 package com.news.newsCrawling.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.news.newsCrawling.model.contants.AGENT_ROLE;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.service.command.CommandFactory;
@@ -12,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
-import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,7 +28,6 @@ public class NewsCrawlingWorker {
     private final CommandFactory commandFactory;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private final KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
 
     private CommandInterface daumCommand;
     private CommandInterface recursiveDaumCommand;

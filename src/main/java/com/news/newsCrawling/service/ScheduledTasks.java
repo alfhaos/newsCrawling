@@ -94,8 +94,6 @@ public class ScheduledTasks {
         float[] llmEmbedding = vectorDatabaseUtil.getEmbeddingForKeyword(llmResult);
         List<NewsDataVo> refinedKeywords = vectorDatabaseUtil.searchSimilarNews(llmEmbedding, topN, searchDate.name());
         String llmSummaryResult = llmService.newsSummary(keywords, refinedKeywords);
-//        HashMap<String, String> summarizeWeeklyNewsByKeywords = llmService.summarizeWeeklyNewsByKeywords(keywordList);
-
         emailService.sendEmail(keywordList, popularList, searchDate, llmSummaryResult);
     }
 }

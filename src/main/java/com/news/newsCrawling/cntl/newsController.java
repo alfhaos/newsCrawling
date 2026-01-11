@@ -2,12 +2,8 @@ package com.news.newsCrawling.cntl;
 
 import com.news.newsCrawling.model.common.SearchDto;
 import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
-import com.news.newsCrawling.model.contants.SEARCH_DATE;
-import com.news.newsCrawling.model.contants.SEARCH_TYPE;
 import com.news.newsCrawling.model.vo.MessageVo;
 import com.news.newsCrawling.model.vo.NewsDataVo;
-import com.news.newsCrawling.service.EmailService;
-import com.news.newsCrawling.service.LLMService;
 import com.news.newsCrawling.service.NewsCrawlingService;
 import com.news.newsCrawling.service.ScheduledTasks;
 import com.news.newsCrawling.service.command.CommandFactory;
@@ -15,12 +11,13 @@ import com.news.newsCrawling.service.command.CommandInterface;
 import com.news.newsCrawling.util.CommonResponse;
 import com.news.newsCrawling.util.KeyWordUtil;
 import com.news.newsCrawling.util.TextRankKeywordExtractor;
-import com.news.newsCrawling.util.VectorDatabaseUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,12 +27,10 @@ public class newsController {
     private final CommandFactory commandFactory;
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
-    private final EmailService emailService;
     private final ScheduledTasks scheduledTasks;
     @GetMapping("/")
     private CommonResponse<Object> test() throws Exception {
 
-        int test = newscrawlingService.test();
         CommandInterface command = commandFactory.getCommand(COMMAND_SITE_TYPE.DAUM.getValue());
         MessageVo messageVo = MessageVo.builder()
                 .url("https://news.daum.net/")
@@ -81,14 +76,14 @@ public class newsController {
     }
 
     @GetMapping("/test/mail")
-    private CommonResponse<Object> mailTest(@RequestBody SearchDto searchDto) throws Exception {
+    private CommonResponse<Object> mailTest() throws Exception {
 
         scheduledTasks.sendEmailDaily();
         return new CommonResponse<>(null);
     }
 
     @GetMapping("/test/mail/weekly")
-    private CommonResponse<Object> mailTestWeekly(@RequestBody SearchDto searchDto) throws Exception {
+    private CommonResponse<Object> mailTestWeekly() throws Exception {
 
         scheduledTasks.sendEmailWeekly();
         return new CommonResponse<>(null);

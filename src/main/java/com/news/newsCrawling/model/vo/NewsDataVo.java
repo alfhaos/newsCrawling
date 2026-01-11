@@ -5,8 +5,7 @@ import com.news.newsCrawling.model.contants.COMMAND_SITE_TYPE;
 import com.news.newsCrawling.util.CommonUtil;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
@@ -19,8 +18,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Data
+@Getter
 @Builder
+@AllArgsConstructor
 public class NewsDataVo {
 
     private Long id;
@@ -156,118 +156,24 @@ public class NewsDataVo {
         // TextSegmentDto 생성 및 반환
         return new TextSegmentDto(newsData.getId(), textSegment);
     }
-    public static Set<TextSegmentDto> convertToTextSegmentsList(List<NewsDataVo> newsDataList, String keyword) {
-        return newsDataList.stream()
-                .filter(news -> news.getContent() != null && !news.getContent().isEmpty()) // content가 null이거나 빈 값이 아닌 경우만 처리
-                .map(news -> {
-                    // 메타데이터 생성
-                    Metadata metadata = new Metadata();
-                    metadata.put("title", news.getTitle());
-                    metadata.put("summary", news.getSummaryContent());
-                    metadata.put("createdAt", news.getCreateAt().toString());
-                    metadata.put("keyword", keyword);
 
-                    // TextSegment 생성
-                    TextSegment textSegment = new TextSegment(news.getContent(), metadata);
-
-                    // TextSegmentDto 생성
-                    return new TextSegmentDto(news.getId(), textSegment);
-                })
-                .collect(Collectors.toSet());
+    public void setSummaryContent(String summaryContent) {
+        this.summaryContent = summaryContent;
     }
 
-
-    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt, LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore, int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-        this.publisher = publisher;
-        this.url = url;
-        this.viewCnt = viewCnt;
-        this.commentCnt = commentCnt;
-        this.createAt = createAt;
-        this.recommandEmotionScore = recommandEmotionScore;
-        this.likeEmotionScore = likeEmotionScore;
-        this.impressedEmotionScore = impressedEmotionScore;
-        this.angryEmotionScore = angryEmotionScore;
-        this.sadEmotionScore = sadEmotionScore;
-        this.depth = depth;
-        this.siteType = siteType;
-    }
-
-    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt, LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore, int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType, float[] embedding) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-        this.publisher = publisher;
-        this.url = url;
-        this.viewCnt = viewCnt;
-        this.commentCnt = commentCnt;
-        this.createAt = createAt;
-        this.recommandEmotionScore = recommandEmotionScore;
-        this.likeEmotionScore = likeEmotionScore;
-        this.impressedEmotionScore = impressedEmotionScore;
-        this.angryEmotionScore = angryEmotionScore;
-        this.sadEmotionScore = sadEmotionScore;
-        this.depth = depth;
-        this.siteType = siteType;
+    public void setEmbedding(float[] embedding) {
         this.embedding = embedding;
     }
 
-    public NewsDataVo(Long id, String title, String content) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-    }
-    @Builder
-    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt,
-                      LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore,
-                      int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType, String summaryContent,
-                      float[] embedding) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-        this.publisher = publisher;
-        this.url = url;
-        this.viewCnt = viewCnt;
-        this.commentCnt = commentCnt;
-        this.createAt = createAt;
-        this.recommandEmotionScore = recommandEmotionScore;
-        this.likeEmotionScore = likeEmotionScore;
-        this.impressedEmotionScore = impressedEmotionScore;
-        this.angryEmotionScore = angryEmotionScore;
-        this.sadEmotionScore = sadEmotionScore;
+    public void setDepth(int depth) {
         this.depth = depth;
-        this.siteType = siteType;
-        this.summaryContent = summaryContent;
-        this.embedding = embedding;
     }
 
-    public NewsDataVo(Long id, String title, String summaryContent, Double similarity) {
-        this.id = id;
-        this.title = title;
-        this.summaryContent = summaryContent;
-        this.similarity = similarity;
+    public void setSiteType(COMMAND_SITE_TYPE siteType) {
+        this.siteType = siteType;
     }
 
-    public NewsDataVo(Long id, String title, String content, String publisher, String url, String viewCnt, int commentCnt, LocalDateTime createAt, int recommandEmotionScore, int likeEmotionScore, int impressedEmotionScore, int angryEmotionScore, int sadEmotionScore, int depth, COMMAND_SITE_TYPE siteType, String summaryContent, float[] embedding, Double similarity) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-        this.publisher = publisher;
+    public void setUrl(String url) {
         this.url = url;
-        this.viewCnt = viewCnt;
-        this.commentCnt = commentCnt;
-        this.createAt = createAt;
-        this.recommandEmotionScore = recommandEmotionScore;
-        this.likeEmotionScore = likeEmotionScore;
-        this.impressedEmotionScore = impressedEmotionScore;
-        this.angryEmotionScore = angryEmotionScore;
-        this.sadEmotionScore = sadEmotionScore;
-        this.depth = depth;
-        this.siteType = siteType;
-        this.summaryContent = summaryContent;
-        this.embedding = embedding;
-        this.similarity = similarity;
     }
 }

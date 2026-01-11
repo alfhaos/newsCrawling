@@ -6,10 +6,8 @@ import java.io.Serializable;
 
 @Getter
 public enum COMMAND_SITE_TYPE implements Serializable {
-
     DAUM("DAUM", "daum"),
     RECURSIVE_DAUM("RECURSIVE_DAUM", "recursive_daum");
-
     private final String value;
     private final String message;
 

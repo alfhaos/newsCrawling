@@ -21,8 +21,6 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class KeyWordUtil {
-
-    private final KoreanPostpositionRemover koreanPostpositionRemover;
     // 추출할 키워드 수
     private static final int topN = 5;
     private static final String fieldName = "content";
@@ -102,8 +100,6 @@ public class KeyWordUtil {
                 return KoreanPostpositionRemover.removePostposition(result).stream()
                         .filter(word -> word.length() >= 2)
                         .toList();
-
-
             }
         }
     }

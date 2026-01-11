@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
-
 @Component
 public class SeleniumCrawlingUtil implements CrawlingInterface {
     public static WebDriver driver;

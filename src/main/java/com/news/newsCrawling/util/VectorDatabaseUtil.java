@@ -3,7 +3,6 @@ package com.news.newsCrawling.util;
 import com.news.newsCrawling.mapper.NewsCrawlingMapper;
 import com.news.newsCrawling.model.common.TextSegmentDto;
 import com.news.newsCrawling.model.vo.NewsDataVo;
-import dev.langchain4j.data.segment.TextSegment;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.embedding.Embedding;
@@ -11,13 +10,9 @@ import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.api.OpenAiApi;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -70,7 +65,6 @@ public class VectorDatabaseUtil {
         return embedding.getOutput();
 
     }
-
     public float[] getEmbeddingForKeyword(String keyword) {
 
         // 2️⃣ 임베딩 생성

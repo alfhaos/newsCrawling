@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum DATA_SELECTOR{
-
     WRAPPER("wrapper"),
     TITLE("title"),
     CONTENT("content"),

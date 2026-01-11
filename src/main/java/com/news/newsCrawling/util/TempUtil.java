@@ -9,14 +9,12 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class TempUtil {
     @Lazy
     private final CommandFactory commandFactory;
     public void test(List<MessageVo> urlList) throws Exception {
-        // TODO: 카프카에 재귀적 크롤링 메세지 전송
         CommandInterface command = commandFactory.getCommand(COMMAND_SITE_TYPE.RECURSIVE_DAUM.getValue());
         for(MessageVo vo: urlList){
             command.execute(vo);

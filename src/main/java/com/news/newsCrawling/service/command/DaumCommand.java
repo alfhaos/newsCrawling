@@ -36,7 +36,6 @@ public class DaumCommand implements CommandInterface {
     private final KafkaTemplate<String, MessageVo> kafkaTemplate;
     private final KeyWordUtil keyWordUtil;
     private final TextRankKeywordExtractor textRankKeywordExtractor;
-    private final VectorDatabaseUtil vectorDatabaseUtil;
     private final LLMService llmService;
     @Value("${agent.topic}")
     private String topic;
@@ -87,13 +86,9 @@ public class DaumCommand implements CommandInterface {
                 System.out.println("DaumCommand - URL Already Processed: " + messageVo.getUrl());
             }
         }
-
-        // TODO: 카프카 메세지 전송 후 워커에서 DB에 저장해야 하지만 일단 바로 저장
         for (MessageVo messageVo : list) {
             kafkaTemplate.send(topic, messageVo);
         }
-
-//        saveToDatabase(list);
     }
 
     @Override
